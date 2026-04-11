@@ -14,6 +14,7 @@ import arror_right from "@/public/public_images/arrow-right.svg";
 import Loader from "@/components/loader/Loader";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
+import { createClient } from "@/utils/supabase/client";
 
 const Signin = () => {
   const {
@@ -27,10 +28,19 @@ const Signin = () => {
 
   const { addToast } = useToast();
   const router = useRouter();
+  const supabase = createClient();
 
   const onSubmit = async (data: SignInFormValues) => {
-    // TODO: Replace with actual Supabase auth when ready
-    // For now, navigate to the dashboard
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      addToast(error.message, "error");
+      return;
+    }
+
     addToast("Signed in successfully!", "success");
     router.push("/overview");
   };

@@ -12,6 +12,7 @@ interface Trade {
     setup: string;
     date: string;
     emotion: string;
+    account_id?: string | null;
 }
 
 interface RecentTradesProps {

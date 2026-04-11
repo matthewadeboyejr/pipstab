@@ -2,18 +2,17 @@
 
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
     label: string;
     value: string;
     change?: string;
     trend?: "up" | "down" | "neutral";
-    icon: LucideIcon;
+    icon: React.ReactNode;
     sparklineData?: number[];
 }
 
-export default function StatCard({ label, value, change, trend = "neutral", icon: Icon, sparklineData }: StatCardProps) {
+export default function StatCard({ label, value, change, trend = "neutral", icon, sparklineData }: StatCardProps) {
     const trendColors = {
         up: "text-emerald-400",
         down: "text-red-400",
@@ -59,7 +58,7 @@ export default function StatCard({ label, value, change, trend = "neutral", icon
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-accent" />
+                            {icon}
                         </div>
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
                     </div>

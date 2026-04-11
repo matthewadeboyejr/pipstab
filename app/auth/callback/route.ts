@@ -1,0 +1,24 @@
+import { NextResponse } from 'next/server'
+// The client you created from the Server-Side Auth instructions
+import { createClient } from '@/utils/supabase/server'
+
+export async function GET(request: Request) {
+    const { searchParams, origin } = new URL(request.url)
+    const code = searchParams.get('code')
+    // if "next" is in param, use it as the redirect URL
+    const next = searchParams.get('next') ?? '/'
+
+    if (code) {
+        const supabase = await createClient()
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error) {
+            // Optional: Add a query parameter to show a success toast on login
+            const forwardedUrl = `${origin}${next}?verified=true`
+
+            return NextResponse.redirect(forwardedUrl)
+        }
+    }
+
+    // return the user to an error page with some instructions
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+}

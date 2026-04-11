@@ -1,13 +1,22 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, TrendingUp, TrendingDown, ImagePlus, Camera } from "lucide-react";
+import { X, TrendingUp, TrendingDown, ImagePlus, Camera, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
+import { createClient } from "@/utils/supabase/client";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { logTradeSchema, type LogTradeFormValues } from "@/schemas/logTradeSchema";
+import { useRouter } from "next/navigation";
+import { BROKERS } from "@/utils/brokers";
+import { useAccounts } from "@/context/AccountContext";
 
 interface LogTradeModalProps {
     open: boolean;
     onClose: () => void;
+    tradeToEdit?: any;
 }
 
 const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "GBP/JPY", "USD/CAD", "AUD/USD", "NZD/USD", "XAU/USD", "BTC/USD", "ETH/USD", "NAS100", "US30"];
@@ -29,10 +38,18 @@ function ModalImageUpload({
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const { addToast } = useToast();
 
     const handleFile = useCallback(
         (file: File) => {
             if (!file.type.startsWith("image/")) return;
+
+            // Enforce 500kb limit
+            if (file.size > 500 * 1024) {
+                addToast("Image exceeds 500KB limit.", "error");
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 if (e.target?.result) onUpload(e.target.result as string);
@@ -64,8 +81,7 @@ function ModalImageUpload({
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
             onClick={() => inputRef.current?.click()}
-            className={`flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isDragging ? "border-accent bg-accent/5" : "border-border/40 hover:border-accent/40 hover:bg-accent/5"
-                }`}
+            className={`flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isDragging ? "border-accent bg-accent/5" : "border-border/40 hover:border-accent/40 hover:bg-accent/5"}`}
         >
             <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
             <ImagePlus className="w-5 h-5 text-accent/60" />
@@ -75,15 +91,186 @@ function ModalImageUpload({
     );
 }
 
-export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
-    const [direction, setDirection] = useState<"LONG" | "SHORT">("LONG");
+export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeModalProps) {
     const [beforeImage, setBeforeImage] = useState<string | null>(null);
     const [afterImage, setAfterImage] = useState<string | null>(null);
+    const [customSetups, setCustomSetups] = useState<any[]>([]);
+    const supabase = createClient();
+    const { addToast } = useToast();
+    const router = useRouter();
+    const { accounts, activeAccount } = useAccounts();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: Wire to backend / state
-        onClose();
+    // Default to the first account if none is active
+    const defaultAccountId = activeAccount?.id || (accounts.length > 0 ? accounts[0].id : "");
+
+    // Setup React Hook Form strictly matching our exact UI schema
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        watch,
+        setValue,
+        formState: { errors, isSubmitting },
+    } = useForm<LogTradeFormValues>({
+        resolver: zodResolver(logTradeSchema),
+        defaultValues: {
+            direction: "LONG",
+            pair: pairs[0],
+            session: sessions[0],
+            date: new Date().toISOString().split("T")[0],
+            setup: setups[0],
+            emotion: emotions[0],
+            broker: "Manual",
+            account_id: defaultAccountId,
+        },
+    });
+
+    useEffect(() => {
+        if (open) {
+            supabase.from("setups").select("*").then(({ data }) => {
+                if (data && data.length > 0) {
+                    setCustomSetups(data);
+                }
+            });
+        }
+    }, [open]);
+
+    useEffect(() => {
+        if (tradeToEdit && open) {
+            reset({
+                direction: tradeToEdit.direction.toUpperCase() as "LONG" | "SHORT",
+                pair: tradeToEdit.pair,
+                session: tradeToEdit.session,
+                date: tradeToEdit.rawDate ? new Date(tradeToEdit.rawDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                setup: tradeToEdit.setup,
+                emotion: tradeToEdit.emotion,
+                broker: tradeToEdit.broker || "Manual",
+                account_id: tradeToEdit.account_id || defaultAccountId,
+                pnl: tradeToEdit.pnl.toString(),
+                entry_price: tradeToEdit.entry !== "-" ? tradeToEdit.entry : undefined,
+                exit_price: tradeToEdit.exit !== "-" ? tradeToEdit.exit : undefined,
+                sl: tradeToEdit.sl !== "-" ? tradeToEdit.sl : undefined,
+                lot_size: tradeToEdit.lot_size !== "-" ? tradeToEdit.lot_size : undefined,
+                rr: tradeToEdit.rr !== "-" ? tradeToEdit.rr : undefined,
+                notes: tradeToEdit.notes !== "" ? tradeToEdit.notes : undefined,
+                checklist_results: tradeToEdit.checklist_results || {},
+            });
+            setBeforeImage(tradeToEdit.image_before || null);
+            setAfterImage(tradeToEdit.image_after || null);
+        } else if (!open && !tradeToEdit) {
+            reset({
+                direction: "LONG",
+                pair: pairs[0],
+                session: sessions[0],
+                date: new Date().toISOString().split("T")[0],
+                setup: customSetups.length > 0 ? customSetups[0].name : setups[0],
+                emotion: emotions[0],
+                broker: "Manual",
+                account_id: defaultAccountId,
+                checklist_results: {},
+            });
+            setBeforeImage(null);
+            setAfterImage(null);
+        }
+    }, [tradeToEdit, open, reset, customSetups]);
+
+    const direction = watch("direction");
+    const selectedSetup = watch("setup");
+    
+    const activeChecklist = customSetups.find(s => s.name === selectedSetup)?.checklist || [];
+
+    const uploadImageToSupabase = async (dataUrl: string, userId: string): Promise<string | null> => {
+        // If it's already a Supabase URL (from editing an existing trade), return it
+        if (dataUrl.startsWith("http")) return dataUrl;
+
+        try {
+            // Convert Base64 dataUrl back to a File Blob
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
+            
+            // Generate a unique filename: userId/timestamp.ext
+            const ext = blob.type.split("/")[1] || "jpeg";
+            const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+            // Upload to Supabase Storage bucket
+            const { data, error } = await supabase.storage
+                .from("trade-images")
+                .upload(fileName, blob, {
+                    cacheControl: "3600",
+                    upsert: false,
+                });
+
+            if (error) throw error;
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from("trade-images")
+                .getPublicUrl(fileName);
+
+            return publicUrl;
+        } catch (err) {
+            console.error("Image upload failed:", err);
+            return null;
+        }
+    };
+
+    const onSubmit = async (data: LogTradeFormValues) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("You must be logged in to log a trade.");
+
+            const payload = {
+                user_id: user.id,
+                pair: data.pair,
+                direction: data.direction.toLowerCase(),
+                pnl: parseFloat(data.pnl),
+                rr: data.rr || null,
+                setup: data.setup,
+                emotion: data.emotion,
+                broker: data.broker,
+                account_id: (data as any).account_id || null,
+                date: data.date,
+                session: data.session,
+                entry_price: data.entry_price ? parseFloat(data.entry_price) : null,
+                exit_price: data.exit_price ? parseFloat(data.exit_price) : null,
+                stop_loss: data.sl ? parseFloat(data.sl) : null,
+                lot_size: data.lot_size ? parseFloat(data.lot_size) : null,
+                notes: data.notes || null,
+                checklist_results: data.checklist_results || {},
+                image_before: null as string | null,
+                image_after: null as string | null,
+            };
+
+            // Handle Image Uploads
+            if (beforeImage) {
+                payload.image_before = await uploadImageToSupabase(beforeImage, user.id);
+            }
+            if (afterImage) {
+                payload.image_after = await uploadImageToSupabase(afterImage, user.id);
+            }
+
+            let err;
+            if (tradeToEdit) {
+                const { error } = await supabase.from("trades").update(payload).eq("id", tradeToEdit.id);
+                err = error;
+            } else {
+                const { error } = await supabase.from("trades").insert(payload);
+                err = error;
+            }
+
+            if (err) throw err;
+
+            addToast(tradeToEdit ? "Trade updated successfully!" : "Trade logged successfully!", "success");
+            reset();
+            setBeforeImage(null);
+            setAfterImage(null);
+            onClose();
+            router.refresh();
+
+        } catch (error: any) {
+            addToast(error.message || "Failed to log trade.", "error");
+        }
     };
 
     if (typeof window === "undefined") return null;
@@ -119,14 +306,14 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                             </div>
 
                             {/* Form */}
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
                                 {/* Direction */}
                                 <div>
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-2 block">Direction</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => setDirection("LONG")}
+                                            onClick={() => setValue("direction", "LONG")}
                                             className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${direction === "LONG"
                                                 ? "bg-emerald-400/15 text-emerald-400 border border-emerald-400/30"
                                                 : "bg-secondary text-muted-foreground border border-border/30"
@@ -136,7 +323,7 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setDirection("SHORT")}
+                                            onClick={() => setValue("direction", "SHORT")}
                                             className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${direction === "SHORT"
                                                 ? "bg-red-400/15 text-red-400 border border-red-400/30"
                                                 : "bg-secondary text-muted-foreground border border-border/30"
@@ -145,21 +332,24 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                                             <TrendingDown className="w-4 h-4" /> Short
                                         </button>
                                     </div>
+                                    {errors.direction && <p className="text-xs text-red-500 mt-1">{errors.direction.message}</p>}
                                 </div>
 
                                 {/* Pair + Session */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Pair</label>
-                                        <select className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
+                                        <select {...register("pair")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
                                             {pairs.map((p) => <option key={p} value={p}>{p}</option>)}
                                         </select>
+                                        {errors.pair && <p className="text-xs text-red-500 mt-1">{errors.pair.message}</p>}
                                     </div>
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Session</label>
-                                        <select className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
+                                        <select {...register("session")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
                                             {sessions.map((s) => <option key={s} value={s}>{s}</option>)}
                                         </select>
+                                        {errors.session && <p className="text-xs text-red-500 mt-1">{errors.session.message}</p>}
                                     </div>
                                 </div>
 
@@ -168,57 +358,46 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Date</label>
                                     <input
                                         type="date"
-                                        defaultValue={new Date().toISOString().split("T")[0]}
+                                        {...register("date")}
                                         className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
                                     />
+                                    {errors.date && <p className="text-xs text-red-500 mt-1">{errors.date.message}</p>}
                                 </div>
 
                                 {/* Entry + Exit + SL */}
                                 <div className="grid grid-cols-3 gap-3">
-                                    {[
-                                        { label: "Entry Price", placeholder: "1.0850" },
-                                        { label: "Exit Price", placeholder: "1.0920" },
-                                        { label: "Stop Loss", placeholder: "1.0810" },
-                                    ].map((f) => (
-                                        <div key={f.label}>
-                                            <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">{f.label}</label>
-                                            <input
-                                                type="number"
-                                                step="any"
-                                                placeholder={f.placeholder}
-                                                className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors"
-                                            />
-                                        </div>
-                                    ))}
+                                    <div>
+                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Entry Price</label>
+                                        <input type="number" step="any" placeholder="1.0850" {...register("entry_price")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        {errors.entry_price && <p className="text-xs text-red-500 mt-1">{errors.entry_price.message}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Exit Price</label>
+                                        <input type="number" step="any" placeholder="1.0920" {...register("exit_price")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        {errors.exit_price && <p className="text-xs text-red-500 mt-1">{errors.exit_price.message}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Stop Loss</label>
+                                        <input type="number" step="any" placeholder="1.0810" {...register("sl")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        {errors.sl && <p className="text-xs text-red-500 mt-1">{errors.sl.message}</p>}
+                                    </div>
                                 </div>
 
                                 {/* Lot Size + R:R + P&L */}
                                 <div className="grid grid-cols-3 gap-3">
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Lot Size</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.50"
-                                            className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors"
-                                        />
+                                        <input type="number" step="0.01" placeholder="0.50" {...register("lot_size")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        {errors.lot_size && <p className="text-xs text-red-500 mt-1">{errors.lot_size.message}</p>}
                                     </div>
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">R:R</label>
-                                        <input
-                                            type="text"
-                                            placeholder="1:2.5"
-                                            className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors"
-                                        />
+                                        <input type="text" placeholder="1:2.5" {...register("rr")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                     </div>
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">P&L ($)</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="245.50"
-                                            className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors"
-                                        />
+                                        <input type="number" step="0.01" placeholder="245.50" {...register("pnl")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        {errors.pnl && <p className="text-xs text-red-500 mt-1">{errors.pnl.message}</p>}
                                     </div>
                                 </div>
 
@@ -226,17 +405,75 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Setup</label>
-                                        <select className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
-                                            {setups.map((s) => <option key={s} value={s}>{s}</option>)}
+                                        <select {...register("setup")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
+                                            {customSetups.length > 0 
+                                                ? customSetups.map((s) => <option key={s.id} value={s.name}>{s.name}</option>) 
+                                                : setups.map((s) => <option key={s} value={s}>{s}</option>)}
                                         </select>
+                                        {errors.setup && <p className="text-xs text-red-500 mt-1">{errors.setup.message}</p>}
                                     </div>
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Emotion</label>
-                                        <select className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
+                                        <select {...register("emotion")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
                                             {emotions.map((e) => <option key={e} value={e}>{e}</option>)}
                                         </select>
+                                        {errors.emotion && <p className="text-xs text-red-500 mt-1">{errors.emotion.message}</p>}
                                     </div>
                                 </div>
+
+                                {/* Broker */}
+                                <div>
+                                    <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Broker / Account</label>
+                                    <select {...register("broker")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
+                                        {BROKERS.map((b) => <option key={b} value={b}>{b}</option>)}
+                                    </select>
+                                    {errors.broker && <p className="text-xs text-red-500 mt-1">{errors.broker.message}</p>}
+                                </div>
+
+                                {/* Account Selection */}
+                                <div>
+                                    <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Target Account</label>
+                                    <select 
+                                        {...register("account_id" as any)} 
+                                        className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none"
+                                    >
+                                        {accounts.map((acc) => (
+                                            <option key={acc.id} value={acc.id}>{acc.name} ({acc.broker})</option>
+                                        ))}
+                                    </select>
+                                    {accounts.length === 0 && (
+                                        <p className="text-[10px] text-amber-500 mt-1">No accounts found. Create one in Settings first.</p>
+                                    )}
+                                </div>
+
+                                {/* Dynamic Setup Checklist */}
+                                {activeChecklist.length > 0 && (
+                                    <div className="bg-secondary/50 rounded-xl p-4 border border-border/30 mb-2">
+                                        <label className="text-[11px] text-accent uppercase tracking-wider font-semibold mb-3 flex items-center gap-1.5">
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            Setup Checklist
+                                        </label>
+                                        <div className="space-y-3">
+                                            {activeChecklist.map((item: string, idx: number) => (
+                                                <label key={idx} className="flex items-start gap-3 cursor-pointer group">
+                                                    <div className="relative flex items-center mt-0.5">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            {...register(`checklist_results.${item}` as any)}
+                                                            className="peer sr-only"
+                                                        />
+                                                        <div className="w-4 h-4 rounded border border-border/50 peer-checked:bg-accent peer-checked:border-accent transition-all flex items-center justify-center bg-background group-hover:border-accent/50">
+                                                            <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-tight peer-checked:text-foreground select-none">
+                                                        {item}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Chart Screenshots */}
                                 <div>
@@ -264,6 +501,7 @@ export default function LogTradeModal({ open, onClose }: LogTradeModalProps) {
                                 <div>
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Notes</label>
                                     <textarea
+                                        {...register("notes")}
                                         rows={3}
                                         placeholder="What was your reasoning? Any rule violations? What did you learn?"
                                         className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors resize-none"

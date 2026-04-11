@@ -14,7 +14,7 @@ import arror_right from "@/public/public_images/arrow-right.svg";
 import authbg from "@/public/public_images/authbg.svg";
 import Loader from "@/components/loader/Loader";
 import { useRouter } from "next/navigation";
-//import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/context/ToastContext";
 
 const Signup = () => {
@@ -29,13 +29,29 @@ const Signup = () => {
 
   const { addToast } = useToast();
   const router = useRouter();
+  const supabase = createClient();
 
   const onSubmit = async (data: SignupSchemaType) => {
-    // TODO: Replace with actual Supabase auth when ready
-    addToast("Account created successfully!", "success");
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.firstname,
+          last_name: data.lastname,
+          phone: data.phone,
+        },
+      },
+    });
+
+    if (error) {
+      addToast(error.message, "error");
+      return;
+    }
+
+    addToast("Account created successfully! Please check your email to verify.", "success");
     router.push("/overview");
   };
-
 
   return (
     <>

@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Bell, Plus, Menu, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
+import { createClient } from "@/utils/supabase/client";
+import AccountSelector from "@/components/dashboard/AccountSelector";
 
 const routeTitles: Record<string, string> = {
     "/overview": "Overview",
@@ -26,6 +28,21 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
     const title = routeTitles[pathname] || "Dashboard";
     const { theme, toggleTheme } = useTheme();
     const [tradeModalOpen, setTradeModalOpen] = useState(false);
+    const supabase = createClient();
+    const [firstName, setFirstName] = useState("");
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.user_metadata?.first_name) {
+                setFirstName(user.user_metadata.first_name);
+            }
+        }
+        fetchUser();
+    }, []);
+
+    // Create a personalized title if on overview
+    const displayTitle = (pathname === "/overview" && firstName) ? `Welcome back, ${firstName}` : title;
 
     return (
         <motion.header
@@ -43,7 +60,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                     <Menu className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-lg font-semibold text-foreground font-['Montserrat']">{title}</h1>
+                    <h1 className="text-lg font-semibold text-foreground font-['Montserrat']">{displayTitle}</h1>
                     <p className="text-[11px] text-muted-foreground hidden sm:block">
                         {new Date().toLocaleDateString("en-US", {
                             weekday: "long",
@@ -55,10 +72,13 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 </div>
             </div>
 
-            {/* Right: Search, Theme Toggle, Notifications, Quick Add */}
+            {/* Right: Account Selector, Search, Theme Toggle, Notifications, Quick Add */}
             <div className="flex items-center gap-2">
+                {/* Account Selector */}
+                <AccountSelector />
+
                 {/* Search */}
-                <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-border/50 w-64">
+                <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-border/50 w-64 ml-2">
                     <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                     <input
                         type="text"

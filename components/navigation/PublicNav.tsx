@@ -12,7 +12,7 @@ const PublicNav = () => {
   const { theme, toggleTheme } = useTheme();
 
   const tools = [
-    { href: "/tools/news-calendar", label: "News & Calendar" },
+    { href: "/news-calendar", label: "News & Calendar" },
     { href: "/tools/journal", label: "Journal & Analysis" },
     { href: "/tools/Ai Fundamentals", label: "Ai Fundamentals" },
     { href: "/tools/calculator", label: "Forex Calculator" },

@@ -1,0 +1,22 @@
+import { z } from "zod";
+
+export const logTradeSchema = z.object({
+    direction: z.enum(["LONG", "SHORT"]),
+    pair: z.string().min(1, "Pair is required"),
+    session: z.string().min(1, "Session is required"),
+    date: z.string().min(1, "Date is required"),
+    entry_price: z.string().optional(),
+    exit_price: z.string().optional(),
+    sl: z.string().optional(),
+    lot_size: z.string().optional(),
+    rr: z.string().optional(),
+    pnl: z.string().min(1, "P&L is required"),
+    setup: z.string().min(1, "Setup is required"),
+    emotion: z.string().min(1, "Emotion is required"),
+    broker: z.string().min(1, "Broker is required"),
+    account_id: z.string().min(1, "Account is required"),
+    notes: z.string().optional(),
+    checklist_results: z.record(z.string(), z.boolean()).optional(),
+});
+
+export type LogTradeFormValues = z.infer<typeof logTradeSchema>;

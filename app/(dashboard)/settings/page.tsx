@@ -1,19 +1,202 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { User, Shield, Bell, Key, Save, Plus, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { User, Shield, Bell, Key, Save, Plus, X, Loader2, CreditCard } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/context/ToastContext";
+import BrokerImport from "@/components/dashboard/settings/BrokerImport";
+import AccountManager from "@/components/dashboard/settings/AccountManager";
+
+type NotificationPreferences = {
+    daily_performance_summary: boolean;
+    rule_violation_alerts: boolean;
+    alpha_leakage_warnings: boolean;
+    ai_insight_notifications: boolean;
+    economic_calendar_reminders: boolean;
+};
+
+type ProfileData = {
+    display_name: string;
+    timezone: string;
+    base_currency: string;
+    trading_rules: string[];
+    notification_preferences: NotificationPreferences;
+};
+
+const NOTIFICATION_LABELS: { key: keyof NotificationPreferences; label: string; desc: string }[] = [
+    { key: "daily_performance_summary", label: "Daily performance summary", desc: "Get a recap of your trading day" },
+    { key: "rule_violation_alerts", label: "Rule violation alerts", desc: "Notify when a trade breaks your rules" },
+    { key: "alpha_leakage_warnings", label: "Alpha Leakage warnings", desc: "Alert when leakage score exceeds threshold" },
+    { key: "ai_insight_notifications", label: "AI insight notifications", desc: "New pattern or recommendation detected" },
+    { key: "economic_calendar_reminders", label: "Economic calendar reminders", desc: "Upcoming high-impact events" },
+];
 
 export default function SettingsPage() {
-    const [rules, setRules] = useState([
-        "Max 3 trades per day",
-        "No trading during high-impact news",
-        "Position size ≤ 2% of account",
-        "No re-entry after stop loss",
-        "Only trade during London/NY session",
-    ]);
+    const supabase = createClient();
+    const { addToast } = useToast();
+
+    const [loading, setLoading] = useState(true);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [savingRules, setSavingRules] = useState(false);
+    const [savingNotifications, setSavingNotifications] = useState(false);
+
+    // Profile fields
+    const [displayName, setDisplayName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [timezone, setTimezone] = useState("GMT+1 (WAT)");
+    const [baseCurrency, setBaseCurrency] = useState("USD");
+
+    // Trading rules
+    const [rules, setRules] = useState<string[]>([]);
     const [newRule, setNewRule] = useState("");
 
+    // Notification preferences
+    const [notifications, setNotifications] = useState<NotificationPreferences>({
+        daily_performance_summary: true,
+        rule_violation_alerts: true,
+        alpha_leakage_warnings: true,
+        ai_insight_notifications: false,
+        economic_calendar_reminders: true,
+    });
+
+    // Fetch user data and profile on mount
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Set auth data
+            setEmail(user.email || "");
+            setPhone(user.user_metadata?.phone || "");
+
+            // Fetch profile
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+            if (profile) {
+                setDisplayName(profile.display_name || "");
+                setTimezone(profile.timezone || "GMT+1 (WAT)");
+                setBaseCurrency(profile.base_currency || "USD");
+                setRules(profile.trading_rules || []);
+                setNotifications(profile.notification_preferences || {
+                    daily_performance_summary: true,
+                    rule_violation_alerts: true,
+                    alpha_leakage_warnings: true,
+                    ai_insight_notifications: false,
+                    economic_calendar_reminders: true,
+                });
+            } else {
+                // No profile yet — use auth metadata as fallback
+                const firstName = user.user_metadata?.first_name || "";
+                const lastName = user.user_metadata?.last_name || "";
+                setDisplayName(`${firstName} ${lastName}`.trim());
+            }
+        } catch (err) {
+            console.error("Error fetching settings:", err);
+            addToast("Failed to load settings", "error");
+        } finally {
+            setLoading(false);
+        }
+    }, [supabase, addToast]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // Save Profile
+    const saveProfile = async () => {
+        setSavingProfile(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            // Update auth user metadata
+            const nameParts = displayName.trim().split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
+
+            const { error: authError } = await supabase.auth.updateUser({
+                data: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                },
+            });
+
+            if (authError) throw authError;
+
+            // Upsert profile
+            const { error: profileError } = await supabase
+                .from("profiles")
+                .upsert({
+                    id: user.id,
+                    display_name: displayName.trim(),
+                    timezone,
+                    base_currency: baseCurrency,
+                }, { onConflict: "id" });
+
+            if (profileError) throw profileError;
+
+            addToast("Profile saved successfully", "success");
+        } catch (err) {
+            console.error("Error saving profile:", err);
+            addToast("Failed to save profile", "error");
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
+    // Save Trading Rules
+    const saveRules = async () => {
+        setSavingRules(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            const { error } = await supabase
+                .from("profiles")
+                .update({ trading_rules: rules })
+                .eq("id", user.id);
+
+            if (error) throw error;
+            addToast("Trading rules saved", "success");
+        } catch (err) {
+            console.error("Error saving rules:", err);
+            addToast("Failed to save trading rules", "error");
+        } finally {
+            setSavingRules(false);
+        }
+    };
+
+    // Save Notification Preferences
+    const saveNotifications = async () => {
+        setSavingNotifications(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            const { error } = await supabase
+                .from("profiles")
+                .update({ notification_preferences: notifications })
+                .eq("id", user.id);
+
+            if (error) throw error;
+            addToast("Notification preferences saved", "success");
+        } catch (err) {
+            console.error("Error saving notifications:", err);
+            addToast("Failed to save notification preferences", "error");
+        } finally {
+            setSavingNotifications(false);
+        }
+    };
+
+    // Trading rules handlers
     const addRule = () => {
         if (newRule.trim()) {
             setRules([...rules, newRule.trim()]);
@@ -22,6 +205,18 @@ export default function SettingsPage() {
     };
 
     const removeRule = (i: number) => setRules(rules.filter((_, idx) => idx !== i));
+
+    const toggleNotification = (key: keyof NotificationPreferences) => {
+        setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="w-6 h-6 text-accent animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-[900px] mx-auto">
@@ -32,34 +227,79 @@ export default function SettingsPage() {
                     <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Profile</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                        { label: "Display Name", value: "Trader", type: "text" },
-                        { label: "Email", value: "trader@piptab.com", type: "email" },
-                        { label: "Timezone", value: "GMT+1 (WAT)", type: "text" },
-                        { label: "Base Currency", value: "USD", type: "text" },
-                    ].map((field) => (
-                        <div key={field.label}>
-                            <label className="text-xs text-muted-foreground mb-1.5 block font-medium">{field.label}</label>
-                            <input
-                                type={field.type}
-                                defaultValue={field.value}
-                                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
-                            />
-                        </div>
-                    ))}
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Display Name</label>
+                        <input
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            disabled
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground/50 outline-none cursor-not-allowed"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Phone</label>
+                        <input
+                            type="text"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Timezone</label>
+                        <input
+                            type="text"
+                            value={timezone}
+                            onChange={(e) => setTimezone(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Base Currency</label>
+                        <input
+                            type="text"
+                            value={baseCurrency}
+                            onChange={(e) => setBaseCurrency(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                        />
+                    </div>
                 </div>
                 <div className="flex justify-end mt-4">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:brightness-110 transition-all">
-                        <Save className="w-4 h-4" /> Save Changes
+                    <button
+                        onClick={saveProfile}
+                        disabled={savingProfile}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {savingProfile ? "Saving..." : "Save Changes"}
                     </button>
                 </div>
             </motion.div>
 
             {/* Trading Rules */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-2xl bg-card border border-border/50 p-6">
-                <div className="flex items-center gap-2 mb-2">
-                    <Shield className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Trading Rules</h3>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Trading Rules</h3>
+                    </div>
+                    <button
+                        onClick={saveRules}
+                        disabled={savingRules}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {savingRules ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        {savingRules ? "Saving..." : "Save Rules"}
+                    </button>
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-4">Define your personal rules. Violations will be tracked in Analytics.</p>
                 <div className="space-y-2 mb-4">
@@ -74,6 +314,9 @@ export default function SettingsPage() {
                             </button>
                         </motion.div>
                     ))}
+                    {rules.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No trading rules yet. Add your first rule below.</p>
+                    )}
                 </div>
                 <div className="flex gap-2">
                     <input
@@ -92,25 +335,34 @@ export default function SettingsPage() {
 
             {/* Notifications */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-2xl bg-card border border-border/50 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <Bell className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Notifications</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Notifications</h3>
+                    </div>
+                    <button
+                        onClick={saveNotifications}
+                        disabled={savingNotifications}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {savingNotifications ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        {savingNotifications ? "Saving..." : "Save Preferences"}
+                    </button>
                 </div>
                 <div className="space-y-3">
-                    {[
-                        { label: "Daily performance summary", desc: "Get a recap of your trading day", default: true },
-                        { label: "Rule violation alerts", desc: "Notify when a trade breaks your rules", default: true },
-                        { label: "Alpha Leakage warnings", desc: "Alert when leakage score exceeds threshold", default: true },
-                        { label: "AI insight notifications", desc: "New pattern or recommendation detected", default: false },
-                        { label: "Economic calendar reminders", desc: "Upcoming high-impact events", default: true },
-                    ].map((n, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
+                    {NOTIFICATION_LABELS.map((n) => (
+                        <div key={n.key} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
                             <div>
                                 <p className="text-sm text-foreground">{n.label}</p>
                                 <p className="text-[11px] text-muted-foreground">{n.desc}</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" defaultChecked={n.default} className="sr-only peer" />
+                                <input
+                                    type="checkbox"
+                                    checked={notifications[n.key]}
+                                    onChange={() => toggleNotification(n.key)}
+                                    className="sr-only peer"
+                                />
                                 <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:bg-accent/60 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                             </label>
                         </div>
@@ -118,28 +370,26 @@ export default function SettingsPage() {
                 </div>
             </motion.div>
 
-            {/* API Keys */}
+            {/* Trading Accounts & Data Sync */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-card border border-border/50 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <Key className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">API Keys</h3>
+                <div className="flex flex-col gap-2 mb-8">
+                    <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Trading Accounts & Data Sync</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Manage your broker accounts and sync your trading history.</p>
                 </div>
-                <div className="space-y-3">
-                    {[
-                        { name: "Broker API", status: "Connected", key: "****-****-****-7a3f" },
-                        { name: "News Provider", status: "Not Connected", key: "—" },
-                        { name: "Market Data", status: "Connected", key: "****-****-****-9b2e" },
-                    ].map((api, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-border/30">
-                            <div>
-                                <p className="text-sm text-foreground font-medium">{api.name}</p>
-                                <p className="text-[11px] text-muted-foreground font-mono">{api.key}</p>
-                            </div>
-                            <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${api.status === "Connected" ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"}`}>
-                                {api.status}
-                            </span>
+                
+                <div className="space-y-10">
+                    <AccountManager />
+                    
+                    <div className="pt-6 border-t border-border/30">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Key className="w-3.5 h-3.5 text-accent" />
+                            <h4 className="text-xs font-bold text-foreground">Import History</h4>
                         </div>
-                    ))}
+                        <BrokerImport />
+                    </div>
                 </div>
             </motion.div>
         </motion.div>
