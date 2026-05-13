@@ -14,14 +14,16 @@ const ThemeContext = createContext<ThemeContextType>({
     toggleTheme: () => { },
 });
 
-function getInitialTheme(): Theme {
-    if (typeof window === "undefined") return "dark";
-    const saved = localStorage.getItem("piptab-theme") as Theme | null;
-    return saved || "dark";
-}
+// Theme selection logic moved to useEffect to prevent hydration mismatch
+
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [theme, setTheme] = useState<Theme>(getInitialTheme);
+    const [theme, setTheme] = useState<Theme>("dark");
+
+    useEffect(() => {
+        const saved = localStorage.getItem("piptab-theme") as Theme | null;
+        if (saved) setTheme(saved);
+    }, []);
 
     // Sync .dark class on <html> whenever theme changes
     useEffect(() => {

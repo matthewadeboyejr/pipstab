@@ -28,13 +28,17 @@ export default function AccountManager() {
     // Form states
     const [name, setName] = useState("");
     const [broker, setBroker] = useState(BROKERS[1]); // Default to Exness
+    const [customBroker, setCustomBroker] = useState("");
     const [initialBalance, setInitialBalance] = useState("0");
+    const [currency, setCurrency] = useState("USD");
     const [accountNumber, setAccountNumber] = useState("");
 
     const resetForm = () => {
         setName("");
         setBroker(BROKERS[1]);
+        setCustomBroker("");
         setInitialBalance("0");
+        setCurrency("USD");
         setAccountNumber("");
         setIsAdding(false);
         setEditingId(null);
@@ -42,8 +46,18 @@ export default function AccountManager() {
 
     const handleEdit = (acc: TradingAccount) => {
         setName(acc.name);
-        setBroker(acc.broker);
+        
+        // Check if current broker is in our predefined list
+        if (BROKERS.includes(acc.broker)) {
+            setBroker(acc.broker);
+            setCustomBroker("");
+        } else {
+            setBroker("Other (Not Listed)");
+            setCustomBroker(acc.broker);
+        }
+
         setInitialBalance(acc.initial_balance.toString());
+        setCurrency(acc.currency || "USD");
         setAccountNumber(acc.account_number || "");
         setEditingId(acc.id);
         setIsAdding(true);
@@ -57,11 +71,17 @@ export default function AccountManager() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
 
+            const finalBroker = broker === "Other (Not Listed)" ? customBroker : broker;
+            if (broker === "Other (Not Listed)" && !customBroker.trim()) {
+                throw new Error("Please enter your broker name");
+            }
+
             const payload = {
                 user_id: user.id,
                 name,
-                broker,
+                broker: finalBroker,
                 initial_balance: parseFloat(initialBalance),
+                currency,
                 account_number: accountNumber || null,
             };
 
@@ -155,6 +175,21 @@ export default function AccountManager() {
                                     >
                                         {BROKERS.map(b => <option key={b} value={b}>{b}</option>)}
                                     </select>
+                                    {broker === "Other (Not Listed)" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            className="pt-2"
+                                        >
+                                            <input 
+                                                required
+                                                value={customBroker}
+                                                onChange={(e) => setCustomBroker(e.target.value)}
+                                                placeholder="Enter Broker Name"
+                                                className="w-full px-3 py-2 rounded-xl bg-secondary border border-border/50 text-sm focus:border-accent/50 outline-none transition-colors"
+                                            />
+                                        </motion.div>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Account Number (Optional)</label>
@@ -167,12 +202,28 @@ export default function AccountManager() {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Starting Balance</label>
-                                    <input 
-                                        type="number"
-                                        value={initialBalance}
-                                        onChange={(e) => setInitialBalance(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-xl bg-secondary border border-border/50 text-sm focus:border-accent/50 outline-none transition-colors"
-                                    />
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={currency}
+                                            onChange={(e) => setCurrency(e.target.value)}
+                                            className="w-24 px-3 py-2 rounded-xl bg-secondary border border-border/50 text-sm focus:border-accent/50 outline-none transition-colors appearance-none"
+                                        >
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                            <option value="GBP">GBP (£)</option>
+                                            <option value="JPY">JPY (¥)</option>
+                                            <option value="AUD">AUD ($)</option>
+                                            <option value="CAD">CAD ($)</option>
+                                            <option value="CHF">CHF (₣)</option>
+                                            <option value="NZD">NZD ($)</option>
+                                        </select>
+                                        <input 
+                                            type="number"
+                                            value={initialBalance}
+                                            onChange={(e) => setInitialBalance(e.target.value)}
+                                            className="flex-1 px-3 py-2 rounded-xl bg-secondary border border-border/50 text-sm focus:border-accent/50 outline-none transition-colors"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center justify-end gap-3 pt-2">
@@ -214,6 +265,7 @@ export default function AccountManager() {
                                         <div className="flex items-center gap-2 mt-0.5">
                                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground font-bold uppercase tracking-wider">{acc.broker}</span>
                                             {acc.account_number && <span className="text-[10px] text-muted-foreground italic">#{acc.account_number}</span>}
+                                            <span className="text-[10px] text-accent font-bold uppercase tracking-wider">{acc.currency} {acc.initial_balance.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>

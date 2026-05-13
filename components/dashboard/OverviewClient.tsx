@@ -15,13 +15,20 @@ interface OverviewClientProps {
     equityData: number[];
     calendarData: any[];
     insights: InsightData[];
+    kpiStats: {
+        winRate: string;
+        profitFactor: string;
+        avgRR: string;
+        winStreak: string;
+    };
 }
 
 export default function OverviewClient({ 
     initialTrades, 
     equityData, 
     calendarData, 
-    insights 
+    insights,
+    kpiStats
 }: OverviewClientProps) {
     const { activeAccount } = useAccounts();
 
@@ -39,35 +46,31 @@ export default function OverviewClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     label="Win Rate"
-                    value="62.4%"
-                    change="+4.2%"
-                    trend="up"
+                    value={`${kpiStats.winRate}%`}
+                    change="+0.0%"
+                    trend="neutral"
                     icon={<Target className="w-4 h-4 text-accent" />}
-                    sparklineData={[55, 58, 56, 60, 59, 61, 62, 62.4]}
                 />
                 <StatCard
                     label="Profit Factor"
-                    value="1.85"
-                    change="+0.12"
-                    trend="up"
+                    value={kpiStats.profitFactor}
+                    change="+0.00"
+                    trend="neutral"
                     icon={<TrendingUp className="w-4 h-4 text-accent" />}
-                    sparklineData={[1.5, 1.6, 1.55, 1.7, 1.65, 1.78, 1.82, 1.85]}
                 />
                 <StatCard
                     label="Avg R:R"
-                    value="1:2.3"
-                    change="-0.1"
-                    trend="down"
+                    value={kpiStats.avgRR}
+                    change="0.0"
+                    trend="neutral"
                     icon={<BarChart3 className="w-4 h-4 text-accent" />}
-                    sparklineData={[2.5, 2.4, 2.3, 2.4, 2.2, 2.3, 2.3, 2.3]}
                 />
                 <StatCard
                     label="Win Streak"
-                    value="5"
-                    change="+2"
-                    trend="up"
+                    value={kpiStats.winStreak}
+                    change="+0"
+                    trend="neutral"
                     icon={<Flame className="w-4 h-4 text-accent" />}
-                    sparklineData={[1, 0, 2, 1, 3, 2, 4, 5]}
                 />
             </div>
 

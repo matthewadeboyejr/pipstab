@@ -4,10 +4,18 @@ import AnalyticsClient from "@/components/dashboard/analytics/AnalyticsClient";
 export default async function AnalyticsPage() {
     const supabase = await createClient();
 
+    // Get the authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return <div>Please sign in to view your analytics.</div>;
+    }
+
     // Fetch trades for the authenticated user
     const { data: trades, error } = await supabase
         .from('trades')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
     // Format the trades for the client (similar to JournalPage)

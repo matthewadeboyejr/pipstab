@@ -1,10 +1,25 @@
 export const BROKERS = [
     "Manual",
     "Exness", 
-    "FundedNext", 
-    "FTMO", 
+    "Deriv",
+    "XM",
+    "Pepperstone",
+    "HFM",
     "IC Markets", 
+    "FTMO", 
+    "FundedNext",
     "OANDA", 
+    "OctaFX",
+    "FXTM",
+    "FBS",
+    "Admiral Markets",
+    "IG",
+    "Saxo Bank",
+    "Interactive Brokers",
+    "Axi",
+    "FP Markets",
+    "ThinkMarkets",
     "MetaQuotes", 
-    "TopStep"
+    "TopStep",
+    "Other (Not Listed)"
 ];

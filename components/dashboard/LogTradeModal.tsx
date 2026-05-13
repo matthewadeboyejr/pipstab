@@ -19,7 +19,14 @@ interface LogTradeModalProps {
     tradeToEdit?: any;
 }
 
-const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "GBP/JPY", "USD/CAD", "AUD/USD", "NZD/USD", "XAU/USD", "BTC/USD", "ETH/USD", "NAS100", "US30"];
+const pairs = [
+    "EUR/USD", "GBP/USD", "USD/JPY", "GBP/JPY", "USD/CAD", "AUD/USD", "NZD/USD", "XAU/USD", "BTC/USD", "ETH/USD", "NAS100", "US30",
+    "V10 Index", "V25 Index", "V50 Index", "V75 Index", "V100 Index", 
+    "V10 (1s) Index", "V25 (1s) Index", "V50 (1s) Index", "V75 (1s) Index", "V100 (1s) Index",
+    "Crash 300", "Crash 500", "Crash 1000", 
+    "Boom 300", "Boom 500", "Boom 1000",
+    "Step Index", "Other"
+];
 const setups = ["Break & Retest", "Order Block", "FVG", "Liquidity Sweep", "Trendline Break", "Supply/Demand", "Other"];
 const emotions = ["Calm", "Confident", "Anxious", "Fearful", "Euphoric", "Frustrated", "Neutral"];
 const sessions = ["London", "New York", "Asia", "London/NY Overlap"];
@@ -117,11 +124,13 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
         defaultValues: {
             direction: "LONG",
             pair: pairs[0],
+            custom_pair: "",
             session: sessions[0],
             date: new Date().toISOString().split("T")[0],
             setup: setups[0],
             emotion: emotions[0],
             broker: "Manual",
+            custom_broker: "",
             account_id: defaultAccountId,
         },
     });
@@ -140,12 +149,14 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
         if (tradeToEdit && open) {
             reset({
                 direction: tradeToEdit.direction.toUpperCase() as "LONG" | "SHORT",
-                pair: tradeToEdit.pair,
+                pair: pairs.includes(tradeToEdit.pair) ? tradeToEdit.pair : "Other",
+                custom_pair: pairs.includes(tradeToEdit.pair) ? "" : tradeToEdit.pair,
                 session: tradeToEdit.session,
                 date: tradeToEdit.rawDate ? new Date(tradeToEdit.rawDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
                 setup: tradeToEdit.setup,
                 emotion: tradeToEdit.emotion,
-                broker: tradeToEdit.broker || "Manual",
+                broker: BROKERS.includes(tradeToEdit.broker) ? tradeToEdit.broker : "Other (Not Listed)",
+                custom_broker: BROKERS.includes(tradeToEdit.broker) ? "" : tradeToEdit.broker,
                 account_id: tradeToEdit.account_id || defaultAccountId,
                 pnl: tradeToEdit.pnl.toString(),
                 entry_price: tradeToEdit.entry !== "-" ? tradeToEdit.entry : undefined,
@@ -162,11 +173,13 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
             reset({
                 direction: "LONG",
                 pair: pairs[0],
+                custom_pair: "",
                 session: sessions[0],
                 date: new Date().toISOString().split("T")[0],
                 setup: customSetups.length > 0 ? customSetups[0].name : setups[0],
                 emotion: emotions[0],
                 broker: "Manual",
+                custom_broker: "",
                 account_id: defaultAccountId,
                 checklist_results: {},
             });
@@ -177,6 +190,8 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
 
     const direction = watch("direction");
     const selectedSetup = watch("setup");
+    const selectedBroker = watch("broker");
+    const selectedPair = watch("pair");
     
     const activeChecklist = customSetups.find(s => s.name === selectedSetup)?.checklist || [];
 
@@ -222,13 +237,13 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
 
             const payload = {
                 user_id: user.id,
-                pair: data.pair,
+                pair: data.pair === "Other" ? (data as any).custom_pair : data.pair,
                 direction: data.direction.toLowerCase(),
                 pnl: parseFloat(data.pnl),
                 rr: data.rr || null,
                 setup: data.setup,
                 emotion: data.emotion,
-                broker: data.broker,
+                broker: data.broker === "Other (Not Listed)" ? (data as any).custom_broker : data.broker,
                 account_id: (data as any).account_id || null,
                 date: data.date,
                 session: data.session,
@@ -342,6 +357,19 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                         <select {...register("pair")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
                                             {pairs.map((p) => <option key={p} value={p}>{p}</option>)}
                                         </select>
+                                        {selectedPair === "Other" && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: "auto" }}
+                                                className="pt-2"
+                                            >
+                                                <input 
+                                                    {...register("custom_pair" as any)}
+                                                    placeholder="Enter Pair (e.g. V10)"
+                                                    className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                                                />
+                                            </motion.div>
+                                        )}
                                         {errors.pair && <p className="text-xs text-red-500 mt-1">{errors.pair.message}</p>}
                                     </div>
                                     <div>
@@ -421,12 +449,24 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                     </div>
                                 </div>
 
-                                {/* Broker */}
                                 <div>
                                     <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Broker / Account</label>
                                     <select {...register("broker")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors appearance-none">
                                         {BROKERS.map((b) => <option key={b} value={b}>{b}</option>)}
                                     </select>
+                                    {selectedBroker === "Other (Not Listed)" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            className="pt-2"
+                                        >
+                                            <input 
+                                                {...register("custom_broker" as any)}
+                                                placeholder="Enter Broker Name"
+                                                className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground outline-none focus:border-accent/50 transition-colors"
+                                            />
+                                        </motion.div>
+                                    )}
                                     {errors.broker && <p className="text-xs text-red-500 mt-1">{errors.broker.message}</p>}
                                 </div>
 

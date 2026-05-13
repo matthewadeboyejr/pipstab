@@ -70,7 +70,7 @@ export default function Sidebar() {
                     .eq('user_id', user.id)
                     .eq('date', todayStr)
                     .limit(1);
-                
+
                 if (!data || data.length === 0) {
                     setHasCheckedIn(false);
                 } else {
@@ -116,9 +116,9 @@ export default function Sidebar() {
                                 animate={{ opacity: 1, width: "auto" }}
                                 exit={{ opacity: 0, width: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="text-lg font-bold text-sidebar-foreground whitespace-nowrap font-['Montserrat']"
+                                className="text-lg font-black text-sidebar-foreground whitespace-nowrap font-['Montserrat'] tracking-tighter"
                             >
-                                pipTAB
+                                PIPSTAB<span className="text-accent text-3xl">.</span>
                             </motion.span>
                         )}
                     </AnimatePresence>
@@ -127,7 +127,7 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-6">
-                
+
                 {/* Missing Check-in Warning */}
                 <AnimatePresence>
                     {!hasCheckedIn && pathname !== "/psychology" && (

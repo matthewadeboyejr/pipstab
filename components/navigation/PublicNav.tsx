@@ -4,7 +4,7 @@ import Link from "next/link";
 import Hamburger from "hamburger-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Zap } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 const PublicNav = () => {
@@ -12,10 +12,10 @@ const PublicNav = () => {
   const { theme, toggleTheme } = useTheme();
 
   const tools = [
-    { href: "/news-calendar", label: "News & Calendar" },
-    { href: "/tools/journal", label: "Journal & Analysis" },
-    { href: "/tools/Ai Fundamentals", label: "Ai Fundamentals" },
-    { href: "/tools/calculator", label: "Forex Calculator" },
+    { href: "/coming-soon", label: "News & Calendar" },
+    { href: "/coming-soon", label: "Journal & Analysis" },
+    { href: "/coming-soon", label: "Ai Fundamentals" },
+    { href: "/coming-soon", label: "Forex Calculator" },
   ];
 
   return (
@@ -30,10 +30,10 @@ const PublicNav = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-accent-foreground text-xs font-black font-['Montserrat']">P</span>
+              <Zap className="w-4 h-4 text-accent-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground font-['Montserrat'] group-hover:text-accent transition-colors">
-              pipTAB
+            <span className="text-lg font-black text-foreground font-['Montserrat'] group-hover:text-accent transition-colors tracking-tighter">
+              PIPSTAB<span className="text-accent text-xl">.</span>
             </span>
           </Link>
 
@@ -78,10 +78,10 @@ const PublicNav = () => {
               Log In
             </Link>
             <Link
-              href="/auth/sign-up"
-              className="px-5 py-2 bg-accent text-accent-foreground text-sm font-semibold rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(228,230,195,0.15)]"
+              href="/early-access"
+              className="px-5 py-2 bg-accent text-accent-foreground text-sm font-black rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(var(--accent),0.15)]"
             >
-              Get Started
+              Early Access
             </Link>
           </div>
 
@@ -95,10 +95,10 @@ const PublicNav = () => {
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <Link
-              href="/auth/sign-up"
-              className="px-4 py-1.5 bg-accent text-accent-foreground text-xs font-semibold rounded-lg font-['Montserrat']"
+              href="/early-access"
+              className="px-4 py-1.5 bg-accent text-accent-foreground text-xs font-black rounded-lg font-['Montserrat']"
             >
-              Get Started
+              Early Access
             </Link>
             <Hamburger toggled={isOpen} toggle={setOpen} color="currentColor" size={20} />
           </div>

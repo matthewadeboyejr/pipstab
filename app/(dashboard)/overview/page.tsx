@@ -1,46 +1,104 @@
 import { createClient } from "@/utils/supabase/server";
 import OverviewClient from "@/components/dashboard/OverviewClient";
-
-// ─── Mock Data (Pending Full DB Integration) ─────────────────
-const equityData = [
-    10000, 10250, 10120, 10400, 10380, 10600, 10550, 10800, 10750,
-    11000, 10900, 11200, 11100, 11400, 11350, 11600, 11500, 11800,
-    11750, 12000, 11900, 12200, 12100, 12450, 12350, 12600, 12500,
-    12800, 12700, 13000,
-];
-
-const calendarData = Array.from({ length: 90 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (89 - i));
-    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6;
-    const traded = isWeekday && Math.random() > 0.35;
-    return {
-        date: date.toISOString().split("T")[0],
-        pnl: traded ? (Math.random() - 0.4) * 300 : 0,
-        trades: traded ? Math.floor(Math.random() * 5) + 1 : 0,
-    };
-});
-
-const insights: any[] = [
-    { id: "1", text: "Your win rate on Tuesdays is 73%, which is 23% above your average. Consider increasing position size on Tuesday setups.", type: "positive", confidence: 89 },
-    { id: "2", text: "You've taken 4 revenge trades this week after losses. This pattern accounts for 40% of your Alpha Leakage.", type: "warning", confidence: 94 },
-    { id: "3", text: "Your best performing session is London Open (7-9 AM GMT). 65% of your profit comes from this window.", type: "timing", confidence: 87 },
-    { id: "4", text: "Order Block + FVG confluence setups have a 78% win rate over 50 trades. This is your strongest edge.", type: "positive", confidence: 92 },
-];
-
+import { InsightData } from "@/components/dashboard/InsightCard";
 
 export default async function OverviewPage() {
     const supabase = await createClient();
 
-    // Fetch trades for this user!
-    const { data: trades } = await supabase
-        .from('trades')
-        .select('*')
-        .order('date', { ascending: false });
+    // Get the authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Provide a fallback in case there is no data or an error
-    const formattedTrades = (trades || []).map((t) => ({
-        id: t.id || Math.random().toString(),
+    if (!user) {
+        return <div>Please sign in to view your dashboard.</div>;
+    }
+
+    // Fetch trades and accounts
+    const [tradesRes, accountsRes] = await Promise.all([
+        supabase.from('trades').select('*').eq('user_id', user.id).order('date', { ascending: true }),
+        supabase.from('trading_accounts').select('*').eq('user_id', user.id).limit(1)
+    ]);
+
+    const trades = tradesRes.data || [];
+    const primaryAccount = accountsRes.data?.[0];
+    const initialBalance = Number(primaryAccount?.initial_balance) || 0;
+
+    // --- 1. Calculate KPIs ---
+    const totalTrades = trades.length;
+    const wins = trades.filter(t => Number(t.pnl) > 0);
+    const losses = trades.filter(t => Number(t.pnl) < 0);
+    
+    const winRate = totalTrades > 0 ? (wins.length / totalTrades) * 100 : 0;
+    
+    const grossProfit = wins.reduce((acc, t) => acc + Number(t.pnl), 0);
+    const grossLoss = Math.abs(losses.reduce((acc, t) => acc + Number(t.pnl), 0));
+    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? 9.99 : 0);
+
+    const validRRs = trades.filter(t => !isNaN(parseFloat(t.rr))).map(t => parseFloat(t.rr));
+    const avgRR = validRRs.length > 0 ? validRRs.reduce((acc, r) => acc + r, 0) / validRRs.length : 0;
+
+    // Current Win Streak
+    let winStreak = 0;
+    for (let i = trades.length - 1; i >= 0; i--) {
+        if (Number(trades[i].pnl) > 0) winStreak++;
+        else break;
+    }
+
+    // --- 2. Calculate Equity Curve ---
+    let currentBalance = initialBalance;
+    const equityData = [initialBalance];
+    trades.forEach(t => {
+        currentBalance += Number(t.pnl);
+        equityData.push(currentBalance);
+    });
+
+    // --- 3. Calculate Calendar Data (Last 90 Days) ---
+    const calendarMap = new Map();
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+    
+    // Initialize map with zeros for last 90 days
+    for (let i = 0; i < 90; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - (89 - i));
+        calendarMap.set(d.toISOString().split('T')[0], { pnl: 0, trades: 0 });
+    }
+
+    // Fill with real trade data
+    trades.forEach(t => {
+        const dateKey = t.date?.split('T')[0];
+        if (calendarMap.has(dateKey)) {
+            const entry = calendarMap.get(dateKey);
+            entry.pnl += Number(t.pnl);
+            entry.trades += 1;
+        }
+    });
+
+    const calendarData = Array.from(calendarMap.entries()).map(([date, data]) => ({
+        date,
+        ...data
+    }));
+
+    // --- 4. Dynamic Insights ---
+    const insights: InsightData[] = [];
+    if (winRate > 60) {
+        insights.push({ id: "1", text: `Your win rate of ${winRate.toFixed(1)}% is exceptional. Current risk settings are protecting your edge well.`, type: "positive", confidence: 92 });
+    } else if (winRate < 40 && totalTrades > 5) {
+        insights.push({ id: "1", text: "Your win rate has dropped below 40%. Consider reviewing your setup checklists before the next session.", type: "warning", confidence: 85 });
+    }
+
+    if (winStreak >= 3) {
+        insights.push({ id: "2", text: `You are on a ${winStreak}-trade win streak. Avoid "overconfidence bias" — maintain strict lot sizing.`, type: "timing", confidence: 95 });
+    }
+
+    if (profitFactor < 1.2 && totalTrades > 5) {
+        insights.push({ id: "3", text: "Your Profit Factor is leaning towards neutral. Focus on 'letting winners run' to improve your expectancy.", type: "warning", confidence: 88 });
+    } else {
+        insights.push({ id: "3", text: `${trades.length > 0 ? trades[trades.length-1].pair : "Market"} performance is consistent with your historical peak volatility windows.`, type: "neutral", confidence: 70 });
+    }
+
+    // Format trades for the list
+    const formattedTrades = trades.reverse().map((t) => ({
+        id: t.id,
         pair: t.pair || "Unknown",
         direction: (t.direction || "long").toLowerCase(),
         pnl: Number(t.pnl) || 0,
@@ -51,12 +109,20 @@ export default async function OverviewPage() {
         account_id: t.account_id || null
     }));
 
+    const kpiStats = {
+        winRate: winRate.toFixed(1),
+        profitFactor: profitFactor.toFixed(2),
+        avgRR: `1:${avgRR.toFixed(1)}`,
+        winStreak: winStreak.toString()
+    };
+
     return (
         <OverviewClient 
             initialTrades={formattedTrades}
             equityData={equityData}
             calendarData={calendarData}
             insights={insights}
+            kpiStats={kpiStats}
         />
     );
 }

@@ -4,10 +4,18 @@ import SetupsClient from "@/components/dashboard/setups/SetupsClient";
 export default async function SetupsPage() {
     const supabase = await createClient();
 
+    // Get the authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return <div>Please sign in to view your setups.</div>;
+    }
+
     // Fetch user's custom setups
     const { data: setups, error } = await supabase
         .from("setups")
         .select("*")
+        .eq('user_id', user.id)
         .order("created_at", { ascending: true });
 
     const formattedSetups = (setups || []).map(s => ({

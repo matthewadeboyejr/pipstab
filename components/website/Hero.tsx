@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion, Variants } from "framer-motion";
-import { Brain } from "lucide-react";
+import { motion, Variants, AnimatePresence } from "framer-motion";
+import { Brain, Loader2, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { submitEarlyAccess } from "@/app/actions/early-access";
+import { useToast } from "@/context/ToastContext";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -22,6 +25,36 @@ const staggerContainer: Variants = {
 };
 
 const Hero = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const { addToast } = useToast();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setLoading(true);
+    try {
+      const result = await submitEarlyAccess({
+        full_name: "Hero Subscriber",
+        email: email,
+        market: "General",
+      });
+
+      if (result.success) {
+        setSubmitted(true);
+        addToast("You're on the list!", "success");
+      } else {
+        addToast(result.error || "Failed to join waitlist", "error");
+      }
+    } catch (error) {
+      addToast("Something went wrong", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -58,23 +91,61 @@ const Hero = () => {
         all in one cognitive layer.
       </motion.p>
 
+      {/* Early Access Input - Modern Waitlist */}
       <motion.div
         variants={fadeUp}
-        className="flex justify-center items-center w-full flex-col md:flex-row gap-4 mb-10"
+        className="w-full max-w-md mx-auto mb-16 relative group"
       >
-        <Link
-          className="bg-accent py-[12px] px-[24px] border-b-4 border-foreground hero-trial-btn rounded-full w-full max-w-[246px] h-[56px] text-accent-foreground flex items-center justify-center font-['Montserrat'] font-semibold"
-          href="/auth/sign-up"
-        >
-          Start Trading Smarter
-        </Link>
+        <div className="absolute -inset-1 bg-linear-to-r from-accent/40 via-accent/20 to-accent/40 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
 
-        <Link
-          className="bg-background py-[12px] px-[24px] border border-border hero-trial-btn rounded-full w-full max-w-[184px] h-[56px] text-foreground text-center how-it-works-btn font-['Montserrat']"
-          href="#how-it-works"
-        >
-          How it works
-        </Link>
+        <div className="relative overflow-hidden bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[22px] shadow-2xl">
+          <AnimatePresence mode="wait">
+            {!submitted ? (
+              <motion.form
+                key="form"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -20 }}
+                onSubmit={handleSubscribe}
+                className="flex p-1.5"
+              >
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="flex-1 bg-transparent px-6 py-3.5 text-[15px] focus:outline-hidden font-['Montserrat'] text-foreground placeholder:text-white/20"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-7 py-3.5 bg-accent text-accent-foreground font-black rounded-[18px] text-[13px] hover:scale-[0.98] active:scale-[0.95] transition-all whitespace-nowrap shadow-xl flex items-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Get Early Access"}
+                </button>
+              </motion.form>
+            ) : (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center gap-3 py-5 px-6 text-accent"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-black text-sm uppercase tracking-widest">You're on the list!</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-4 opacity-40">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Limited Beta Spots</span>
+          </div>
+          <div className="w-[1px] h-3 bg-white/20" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">V1.0 Launching Soon</span>
+        </div>
       </motion.div>
 
       {/* Dashboard Preview */}

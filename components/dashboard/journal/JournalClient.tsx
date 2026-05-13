@@ -23,8 +23,11 @@ import {
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import BrokerImportModal from "@/components/dashboard/settings/BrokerImportModal";
-import { Upload } from "lucide-react";
+import { Upload, Share2 } from "lucide-react";
 import { useAccounts } from "@/context/AccountContext";
+import { toPng } from 'html-to-image';
+import TradeShareCard from "./TradeShareCard";
+import { useToast } from "@/context/ToastContext";
 
 interface Trade {
     id: string;
@@ -158,7 +161,6 @@ function ImageUploadZone({
     );
 }
 
-import { useToast } from "@/context/ToastContext";
 
 // ─── Journal Client ───────────────────────────────────────────
 export default function JournalClient({ trades }: JournalClientProps) {
@@ -182,6 +184,34 @@ export default function JournalClient({ trades }: JournalClientProps) {
     useEffect(() => {
         setLocalTrades(trades);
     }, [trades]);
+
+    const handleCapture = async (trade: Trade) => {
+        const element = document.getElementById(`share-card-${trade.id}`);
+        if (!element) return;
+
+        try {
+            addToast("Generating your trade card...", "info");
+            
+            // Wait a tiny bit for any layout adjustments
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const dataUrl = await toPng(element, {
+                quality: 1,
+                backgroundColor: '#0A0A0A',
+                pixelRatio: 2, // High DPI for social media
+            });
+            
+            const link = document.createElement('a');
+            link.download = `piptab-${trade.pair}-${trade.direction}-${new Date().getTime()}.png`;
+            link.href = dataUrl;
+            link.click();
+            
+            addToast("Trade card downloaded! Ready to share.", "success");
+        } catch (error) {
+            console.error('Capture failed:', error);
+            addToast("Failed to generate image", "error");
+        }
+    };
 
     const handleDeleteConfirm = async () => {
         if (!tradeToDelete) return;
@@ -368,29 +398,29 @@ export default function JournalClient({ trades }: JournalClientProps) {
                                             >
                                                 <td colSpan={10} className="px-6 py-5 bg-white/5 border-b border-border/20">
                                                     <div className="space-y-4">
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                        <div className="space-y-6">
                                                             {/* Notes */}
-                                                            <div className="md:col-span-2">
+                                                            <div>
                                                                 <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-1.5">Trade Notes</p>
                                                                 <p className="text-sm text-muted-foreground leading-relaxed">{trade.notes || "No notes provided."}</p>
                                                             </div>
 
                                                             {/* Rules Execution */}
                                                             {trade.checklist_results && Object.keys(trade.checklist_results).length > 0 && (
-                                                                <div className="md:col-span-1">
-                                                                    <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                                <div>
+                                                                    <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                                                         <CheckCircle2 className="w-3.5 h-3.5" />
                                                                         Rules Execution
                                                                     </p>
-                                                                    <div className="space-y-2 bg-background/50 rounded-xl p-3 border border-border/20">
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                                                         {Object.entries(trade.checklist_results).map(([rule, passed]) => (
-                                                                            <div key={rule} className="flex items-start gap-2.5">
+                                                                            <div key={rule} className="flex items-start gap-2.5 bg-background/40 rounded-xl p-2.5 border border-border/20">
                                                                                 {passed ? (
-                                                                                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                                                                                 ) : (
-                                                                                    <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                                                                                    <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                                                                                 )}
-                                                                                <span className={`text-sm ${passed ? "text-foreground" : "text-muted-foreground line-through opacity-70"}`}>
+                                                                                <span className={`text-[11px] leading-tight ${passed ? "text-foreground" : "text-muted-foreground line-through opacity-70"}`}>
                                                                                     {rule}
                                                                                 </span>
                                                                             </div>
@@ -440,6 +470,13 @@ export default function JournalClient({ trades }: JournalClientProps) {
 
                                                         {/* Quick Actions */}
                                                         <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-border/10">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleCapture(trade); }}
+                                                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-accent bg-accent/10 hover:bg-accent/20 border border-accent/20 transition-all mr-auto"
+                                                            >
+                                                                <Share2 className="w-3.5 h-3.5" />
+                                                                Capture & Share
+                                                            </button>
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); setTradeToEdit(trade); }}
                                                                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-foreground bg-secondary hover:bg-secondary/80 border border-border/50 transition-colors"
@@ -517,6 +554,15 @@ export default function JournalClient({ trades }: JournalClientProps) {
                 open={importModalOpen}
                 onClose={() => setImportModalOpen(false)}
             />
+
+            {/* Hidden Capture Area */}
+            <div className="fixed -left-[9999px] top-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                {expandedId && (
+                    <div id={`share-card-${expandedId}`}>
+                        <TradeShareCard trade={filteredTrades.find(t => t.id === expandedId)!} />
+                    </div>
+                )}
+            </div>
         </motion.div>
     );
 }

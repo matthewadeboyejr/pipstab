@@ -59,8 +59,16 @@ export default function SetupsClient({ initialSetups }: { initialSetups: Setup[]
         setNewItemText("");
     };
 
-    const handleRemoveChecklistItem = (itemToRemove: string) => {
-        setChecklist(prev => prev.filter(i => i !== itemToRemove));
+    const handleUpdateChecklistItem = (index: number, newValue: string) => {
+        setChecklist(prev => {
+            const updated = [...prev];
+            updated[index] = newValue;
+            return updated;
+        });
+    };
+
+    const handleRemoveChecklistItem = (index: number) => {
+        setChecklist(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSave = async () => {
@@ -224,12 +232,22 @@ export default function SetupsClient({ initialSetups }: { initialSetups: Setup[]
                             
                             <div className="space-y-2 mb-3">
                                 {checklist.map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-background border border-border/30 rounded-lg p-3">
+                                    <div key={idx} className="flex items-center gap-3 bg-background border border-border/30 rounded-lg p-3 focus-within:border-accent/30 transition-colors">
                                         <div className="w-4 h-4 rounded border border-accent flex items-center justify-center">
                                             <CheckCircle2 className="w-3 h-3 text-accent" />
                                         </div>
-                                        <span className="text-sm flex-1">{item}</span>
-                                        <button onClick={() => handleRemoveChecklistItem(item)} className="text-muted-foreground hover:text-red-400 p-1 transition-colors">
+                                        <input
+                                            type="text"
+                                            value={item}
+                                            onChange={(e) => handleUpdateChecklistItem(idx, e.target.value)}
+                                            className="text-sm flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50"
+                                            placeholder="Rule description..."
+                                        />
+                                        <button 
+                                            onClick={() => handleRemoveChecklistItem(idx)} 
+                                            className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
+                                            title="Remove rule"
+                                        >
                                             <X className="w-3.5 h-3.5" />
                                         </button>
                                     </div>

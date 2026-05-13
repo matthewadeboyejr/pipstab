@@ -4,10 +4,18 @@ import PsychologyClient from "@/components/dashboard/psychology/PsychologyClient
 export default async function PsychologyPage() {
     const supabase = await createClient();
 
+    // Get the authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return <div>Please sign in to view your mindset logs.</div>;
+    }
+
     // Fetch user's historical check-ins
     const { data: checkins, error } = await supabase
         .from("checkins")
         .select("*")
+        .eq('user_id', user.id)
         .order("created_at", { ascending: false });
 
     // Format for the client
