@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, CheckCircle2 } from "lucide-react";
+import { Brain, Loader2, CheckCircle2, Loader } from "lucide-react";
 import { useState } from "react";
 import { submitEarlyAccess } from "@/app/actions/early-access";
 import { useToast } from "@/context/ToastContext";
@@ -121,7 +121,7 @@ const Hero = () => {
                   disabled={loading}
                   className="px-7 py-3.5 bg-accent text-accent-foreground font-black rounded-[18px] text-[13px] hover:scale-[0.98] active:scale-[0.95] transition-all whitespace-nowrap shadow-xl flex items-center gap-2 disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Get Early Access"}
+                  {loading ? <Loader /> : "Get Early Access"}
                 </button>
               </motion.form>
             ) : (

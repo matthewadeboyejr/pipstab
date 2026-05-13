@@ -12,6 +12,7 @@ import { logTradeSchema, type LogTradeFormValues } from "@/schemas/logTradeSchem
 import { useRouter } from "next/navigation";
 import { BROKERS } from "@/utils/brokers";
 import { useAccounts } from "@/context/AccountContext";
+import Loader from "@/components/loader/Loader";
 
 interface LogTradeModalProps {
     open: boolean;
@@ -559,9 +560,10 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-accent text-accent-foreground hover:brightness-110 transition-all font-['Montserrat']"
+                                        disabled={isSubmitting}
+                                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-accent text-accent-foreground hover:brightness-110 transition-all font-['Montserrat'] flex items-center justify-center disabled:opacity-50"
                                     >
-                                        Save Trade
+                                        {isSubmitting ? <Loader /> : "Save Trade"}
                                     </button>
                                 </div>
                             </form>

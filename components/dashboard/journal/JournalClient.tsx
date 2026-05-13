@@ -178,6 +178,32 @@ export default function JournalClient({ trades }: JournalClientProps) {
     const [tradeToDelete, setTradeToDelete] = useState<string | null>(null);
     const [importModalOpen, setImportModalOpen] = useState(false);
 
+    const [userName, setUserName] = useState<string>("");
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Try fetching from profiles table first
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('display_name')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.display_name) {
+                    setUserName(profile.display_name);
+                } else {
+                    const metadata = user.user_metadata;
+                    const fullName = metadata?.full_name || metadata?.name || "";
+                    const firstLast = metadata?.first_name ? `${metadata.first_name} ${metadata.last_name || ""}` : "";
+                    setUserName(fullName || firstLast || user.email?.split("@")[0] || "Trader");
+                }
+            }
+        };
+        fetchUser();
+    }, []);
+
     // Keep optimistic state to update UI immediately before server roundtrip
     const [localTrades, setLocalTrades] = useState<Trade[]>(trades);
 
@@ -191,21 +217,21 @@ export default function JournalClient({ trades }: JournalClientProps) {
 
         try {
             addToast("Generating your trade card...", "info");
-            
+
             // Wait a tiny bit for any layout adjustments
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             const dataUrl = await toPng(element, {
                 quality: 1,
                 backgroundColor: '#0A0A0A',
                 pixelRatio: 2, // High DPI for social media
             });
-            
+
             const link = document.createElement('a');
             link.download = `piptab-${trade.pair}-${trade.direction}-${new Date().getTime()}.png`;
             link.href = dataUrl;
             link.click();
-            
+
             addToast("Trade card downloaded! Ready to share.", "success");
         } catch (error) {
             console.error('Capture failed:', error);
@@ -258,9 +284,9 @@ export default function JournalClient({ trades }: JournalClientProps) {
             const matchesSearch = t.pair.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 t.setup.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (t.broker && t.broker.toLowerCase().includes(searchQuery.toLowerCase()));
-            
+
             const matchesAccount = !activeAccount || t.account_id === activeAccount.id;
-            
+
             return matchesSearch && matchesAccount;
         }
     );
@@ -559,7 +585,10 @@ export default function JournalClient({ trades }: JournalClientProps) {
             <div className="fixed -left-[9999px] top-0 overflow-hidden pointer-events-none" aria-hidden="true">
                 {expandedId && (
                     <div id={`share-card-${expandedId}`}>
-                        <TradeShareCard trade={filteredTrades.find(t => t.id === expandedId)!} />
+                        <TradeShareCard
+                            trade={filteredTrades.find(t => t.id === expandedId)!}
+                            userName={userName}
+                        />
                     </div>
                 )}
             </div>

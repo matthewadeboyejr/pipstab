@@ -1,10 +1,8 @@
+import { Loader2 } from "lucide-react";
+
 function Loader() {
   return (
-    <span className="loading-dots">
-      <span className="loading-dots-dot"></span>
-      <span className="loading-dots-dot"></span>
-      <span className="loading-dots-dot"></span>
-    </span>
+    <Loader2 className="w-5 h-5 animate-spin text-accent-foreground" />
   );
 }
 

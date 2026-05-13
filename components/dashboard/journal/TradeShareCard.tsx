@@ -17,7 +17,7 @@ interface Trade {
     image_after?: string | null;
 }
 
-export default function TradeShareCard({ trade }: { trade: Trade }) {
+export default function TradeShareCard({ trade, userName }: { trade: Trade; userName?: string }) {
     const hasImages = trade.image_before || trade.image_after;
 
     return (
@@ -118,9 +118,14 @@ export default function TradeShareCard({ trade }: { trade: Trade }) {
                     <div className="w-10 h-10 bg-accent rounded-[14px] flex items-center justify-center shadow-[0_0_30px_rgba(var(--accent),0.3)]">
                         <Zap className="w-6 h-6 text-accent-foreground" fill="currentColor" />
                     </div>
-                    <span className="text-2xl font-black text-white tracking-tighter font-['Montserrat']">
-                        PIPSTAB<span className="text-accent text-3xl">.</span>
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="text-2xl font-black text-white tracking-tighter font-['Montserrat'] leading-none">
+                            PIPSTAB<span className="text-accent text-3xl">.</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+                            trader: {userName || "Trader"}
+                        </span>
+                    </div>
                 </div>
                 <div className="flex flex-col items-end">
                     <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Verified Performance Log</div>
