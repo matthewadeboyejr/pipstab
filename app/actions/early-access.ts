@@ -2,6 +2,8 @@
 
 import { createClient } from "@/utils/supabase/server";
 
+import { logger } from "@/lib/logger";
+
 export async function submitEarlyAccess(formData: {
     full_name: string;
     email: string;
@@ -22,6 +24,8 @@ export async function submitEarlyAccess(formData: {
     if (error) {
         console.error('Early Access Submission Error:', error);
         
+        await logger.error("Early Access Failed", `Failed to register ${formData.email}`, { error, formData });
+
         // Handle unique constraint error (already registered)
         if (error.code === '23505') {
             return { success: false, error: 'This email is already on the waitlist.' };
@@ -31,5 +35,8 @@ export async function submitEarlyAccess(formData: {
         return { success: false, error: error.message || 'Something went wrong. Please try again.' };
     }
 
+    await logger.info("New Early Access Signup", `${formData.full_name} (${formData.email}) joined the ${formData.market} waitlist.`, { market: formData.market });
+
     return { success: true, data };
 }
+
