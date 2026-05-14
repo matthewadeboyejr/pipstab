@@ -31,19 +31,40 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
     const fetchAccounts = async () => {
         setIsLoading(true);
+        console.log("Fetching accounts...");
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log("Current user:", user?.id);
+
         const { data, error } = await supabase
             .from("trading_accounts")
             .select("*")
             .order("created_at", { ascending: true });
 
-        if (!error && data) {
+        if (error) {
+            console.error("Error fetching accounts:", error);
+        } else if (data) {
+            console.log("Accounts fetched:", data.length);
             setAccounts(data);
         }
         setIsLoading(false);
     };
 
     useEffect(() => {
+        // Initial fetch
         fetchAccounts();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                fetchAccounts();
+            } else if (event === 'SIGNED_OUT') {
+                setAccounts([]);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Load active account from localStorage on mount

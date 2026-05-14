@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -370,7 +370,7 @@ export default function JournalClient({ trades }: JournalClientProps) {
                             {filteredTrades.map((trade, i) => {
                                 const hasImages = !!(trade.image_before || trade.image_after);
                                 return (
-                                    <>
+                                    <Fragment key={trade.id}>
                                         <motion.tr
                                             key={trade.id}
                                             initial={{ opacity: 0 }}
@@ -523,36 +523,35 @@ export default function JournalClient({ trades }: JournalClientProps) {
                                                 </td>
                                             </motion.tr>
                                         )}
-                                    </>
+                                    </Fragment>
                                 );
                             })}
                         </tbody>
                     </table>
                 </div>
             </div>
-            {/* Image Lightbox */}
+            {/* Modals and Overlays */}
             <AnimatePresence>
                 {lightboxImage && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-100 bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
                         onClick={() => setLightboxImage(null)}
-                        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 cursor-pointer"
                     >
                         <motion.img
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
                             src={lightboxImage}
-                            alt="Full size chart"
-                            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                            className="max-w-full max-h-full rounded-lg shadow-2xl"
+                            alt="Lightbox"
                         />
                         <button
+                            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                             onClick={() => setLightboxImage(null)}
-                            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-6 h-6" />
                         </button>
                     </motion.div>
                 )}
@@ -566,7 +565,6 @@ export default function JournalClient({ trades }: JournalClientProps) {
                 description="Are you sure you want to delete this trade? This action cannot be undone and will permanently remove this record from your journal."
                 confirmText="Delete Trade"
                 cancelText="Keep Trade"
-                isLoading={!!isDeleting}
                 isDestructive={true}
             />
 
@@ -583,7 +581,7 @@ export default function JournalClient({ trades }: JournalClientProps) {
 
             {/* Hidden Capture Area */}
             <div className="fixed -left-[9999px] top-0 overflow-hidden pointer-events-none" aria-hidden="true">
-                {expandedId && (
+                {expandedId && filteredTrades.find(t => t.id === expandedId) && (
                     <div id={`share-card-${expandedId}`}>
                         <TradeShareCard
                             trade={filteredTrades.find(t => t.id === expandedId)!}

@@ -231,7 +231,14 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
         }
     };
 
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.warn("LogTradeModal Validation Errors:", errors);
+        }
+    }, [errors]);
+
     const onSubmit = async (data: LogTradeFormValues) => {
+        console.log("Submitting trade data:", data);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("You must be logged in to log a trade.");
@@ -240,23 +247,25 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                 user_id: user.id,
                 pair: data.pair === "Other" ? (data as any).custom_pair : data.pair,
                 direction: data.direction.toLowerCase(),
-                pnl: parseFloat(data.pnl),
+                pnl: typeof data.pnl === 'string' ? parseFloat(data.pnl) : data.pnl,
                 rr: data.rr || null,
                 setup: data.setup,
                 emotion: data.emotion,
                 broker: data.broker === "Other (Not Listed)" ? (data as any).custom_broker : data.broker,
-                account_id: (data as any).account_id || null,
+                account_id: data.account_id && data.account_id !== "" ? data.account_id : null,
                 date: data.date,
                 session: data.session,
-                entry_price: data.entry_price ? parseFloat(data.entry_price) : null,
-                exit_price: data.exit_price ? parseFloat(data.exit_price) : null,
-                stop_loss: data.sl ? parseFloat(data.sl) : null,
-                lot_size: data.lot_size ? parseFloat(data.lot_size) : null,
+                entry_price: data.entry_price ? (typeof data.entry_price === 'string' ? parseFloat(data.entry_price) : data.entry_price) : null,
+                exit_price: data.exit_price ? (typeof data.exit_price === 'string' ? parseFloat(data.exit_price) : data.exit_price) : null,
+                stop_loss: data.sl ? (typeof data.sl === 'string' ? parseFloat(data.sl) : data.sl) : null,
+                lot_size: data.lot_size ? (typeof data.lot_size === 'string' ? parseFloat(data.lot_size) : data.lot_size) : null,
                 notes: data.notes || null,
                 checklist_results: data.checklist_results || {},
                 image_before: null as string | null,
                 image_after: null as string | null,
             };
+
+            console.log("Final Payload for DB:", payload);
 
             // Handle Image Uploads
             if (beforeImage) {
@@ -275,7 +284,10 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                 err = error;
             }
 
-            if (err) throw err;
+            if (err) {
+                console.error("Supabase Error:", err);
+                throw err;
+            }
 
             addToast(tradeToEdit ? "Trade updated successfully!" : "Trade logged successfully!", "success");
             reset();
@@ -285,6 +297,7 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
             router.refresh();
 
         } catch (error: any) {
+            console.error("Submission Failure:", error);
             addToast(error.message || "Failed to log trade.", "error");
         }
     };
@@ -425,9 +438,41 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                     </div>
                                     <div>
                                         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">P&L ($)</label>
-                                        <input type="number" step="0.01" placeholder="245.50" {...register("pnl")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <input 
+                                            type="number" 
+                                            step="0.01" 
+                                            placeholder="245.50" 
+                                            {...register("pnl")} 
+                                            className={`w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm font-bold outline-none focus:border-accent/50 transition-colors ${watch("pnl") && parseFloat(watch("pnl")) > 0 ? "text-emerald-400" : watch("pnl") && parseFloat(watch("pnl")) < 0 ? "text-red-400" : "text-foreground"}`} 
+                                        />
                                         {errors.pnl && <p className="text-xs text-red-500 mt-1">{errors.pnl.message}</p>}
                                     </div>
+                                </div>
+
+                                {/* Outcome Toggle */}
+                                <div className="flex items-center gap-2 p-1 bg-secondary rounded-xl border border-border/30">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const currentPnl = watch("pnl") || "0";
+                                            const val = Math.abs(parseFloat(currentPnl));
+                                            setValue("pnl", isNaN(val) ? "0" : val.toString());
+                                        }}
+                                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${parseFloat(watch("pnl") || "0") >= 0 ? "bg-emerald-400/20 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}
+                                    >
+                                        Win
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const currentPnl = watch("pnl") || "0";
+                                            const val = Math.abs(parseFloat(currentPnl));
+                                            setValue("pnl", isNaN(val) ? "0" : (val * -1).toString());
+                                        }}
+                                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${parseFloat(watch("pnl") || "0") < 0 ? "bg-red-400/20 text-red-400" : "text-muted-foreground hover:text-foreground"}`}
+                                    >
+                                        Loss
+                                    </button>
                                 </div>
 
                                 {/* Setup + Emotion */}
@@ -496,21 +541,29 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                         </label>
                                         <div className="space-y-3">
                                             {activeChecklist.map((item: string, idx: number) => (
-                                                <label key={idx} className="flex items-start gap-3 cursor-pointer group">
-                                                    <div className="relative flex items-center mt-0.5">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            {...register(`checklist_results.${item}` as any)}
-                                                            className="peer sr-only"
-                                                        />
-                                                        <div className="w-4 h-4 rounded border border-border/50 peer-checked:bg-accent peer-checked:border-accent transition-all flex items-center justify-center bg-background group-hover:border-accent/50">
-                                                            <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-tight peer-checked:text-foreground select-none">
-                                                        {item}
-                                                    </span>
-                                                </label>
+                                                <Controller
+                                                    key={`${selectedSetup}-${item}`}
+                                                    control={control}
+                                                    name={`checklist_results.${item}` as any}
+                                                    render={({ field }) => (
+                                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                                            <div className="relative flex items-center mt-0.5">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={field.value || false}
+                                                                    onChange={(e) => field.onChange(e.target.checked)}
+                                                                    className="peer sr-only"
+                                                                />
+                                                                <div className="w-4 h-4 rounded border border-border/50 peer-checked:bg-accent peer-checked:border-accent transition-all flex items-center justify-center bg-background group-hover:border-accent/50">
+                                                                    <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-tight peer-checked:text-foreground select-none">
+                                                                {item}
+                                                            </span>
+                                                        </label>
+                                                    )}
+                                                />
                                             ))}
                                         </div>
                                     </div>
