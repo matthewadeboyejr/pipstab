@@ -17,6 +17,36 @@ export interface AuditReportData {
     raw_text?: string;
 }
 
+function extractAndParseJSON(raw: string): any {
+    if (!raw) return null;
+    let cleaned = raw.trim();
+
+    // Remove markdown code fences if present
+    if (cleaned.startsWith("```json")) {
+        cleaned = cleaned.replace(/^```json\s*/i, "").replace(/\s*```$/i, "").trim();
+    } else if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+    }
+
+    // Try direct parse
+    try {
+        return JSON.parse(cleaned);
+    } catch {
+        // Find outermost JSON object
+        const firstOpen = cleaned.indexOf("{");
+        const lastClose = cleaned.lastIndexOf("}");
+        if (firstOpen !== -1 && lastClose > firstOpen) {
+            const sub = cleaned.substring(firstOpen, lastClose + 1);
+            try {
+                return JSON.parse(sub);
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+}
+
 export async function POST(req: Request) {
     const { message, tone = "brutal" } = await req.json();
 
@@ -97,11 +127,20 @@ Return ONLY raw JSON.`;
         });
 
         const resultText = result.text || "";
+        const parsed = extractAndParseJSON(resultText);
+
         let structuredData: AuditReportData;
 
-        try {
-            structuredData = JSON.parse(resultText);
-        } catch {
+        if (parsed && typeof parsed === "object" && (parsed.verdict_headline || parsed.summary)) {
+            structuredData = {
+                type: "structured",
+                verdict_headline: parsed.verdict_headline || "Performance Audit Verdict",
+                summary: parsed.summary || "Review your trade logs and risk parameters.",
+                leaks_found: Array.isArray(parsed.leaks_found) ? parsed.leaks_found : [],
+                directives: Array.isArray(parsed.directives) ? parsed.directives : ["Maintain strict risk discipline", "Stick to A+ setups only"],
+                coaching_tip: parsed.coaching_tip || "Trade the market in front of you, not your emotions.",
+            };
+        } else {
             structuredData = {
                 type: "chat",
                 verdict_headline: "Performance Auditor Brief",

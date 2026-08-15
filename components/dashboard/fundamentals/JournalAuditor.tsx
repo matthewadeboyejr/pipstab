@@ -148,13 +148,33 @@ export default function JournalAuditor() {
 
             if (!response.ok) throw new Error("Auditor failed to respond");
 
-            const data: AuditReportData = await response.json();
+            let data: AuditReportData = await response.json();
+
+            // Client-side safety check: If summary is a raw JSON string, un-nest it
+            if (data && typeof data.summary === "string" && data.summary.trim().startsWith("{")) {
+                try {
+                    const parsed = JSON.parse(data.summary);
+                    if (parsed && typeof parsed === "object") {
+                        data = {
+                            ...data,
+                            type: "structured",
+                            verdict_headline: parsed.verdict_headline || data.verdict_headline,
+                            summary: parsed.summary || "",
+                            leaks_found: Array.isArray(parsed.leaks_found) ? parsed.leaks_found : data.leaks_found || [],
+                            directives: Array.isArray(parsed.directives) ? parsed.directives : data.directives || [],
+                            coaching_tip: parsed.coaching_tip || data.coaching_tip || "",
+                        };
+                    }
+                } catch (e) {
+                    // Not valid JSON, keep as is
+                }
+            }
 
             const assistMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "assistant",
                 report: data,
-                content: data.raw_text || data.summary,
+                content: data.summary,
                 timestamp: new Date(),
             };
 
