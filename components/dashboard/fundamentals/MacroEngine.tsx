@@ -13,8 +13,27 @@ import {
     ChevronDown,
     X,
     Search,
+    Copy,
+    Check,
+    Globe2,
+    Activity,
+    Target,
+    Clock,
+    Scale,
+    Layers,
+    SlidersHorizontal,
+    Sparkles,
+    BarChart3,
+    ChevronUp,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import {
+    CENTRAL_BANKS,
+    GLOBAL_MACRO_INDICATORS,
+    MACRO_PRESETS,
+    CentralBankInfo,
+    MacroPreset,
+} from "@/lib/macro/centralBanks";
 
 // ─── Available Pairs ────────────────────────────────────────
 const allPairs = [
@@ -26,25 +45,59 @@ const allPairs = [
     { symbol: "NZDUSD", category: "FX" },
     { symbol: "EURGBP", category: "FX" },
     { symbol: "GBPJPY", category: "FX" },
+    { symbol: "AUDJPY", category: "FX" },
+    { symbol: "USDCHF", category: "FX" },
     { symbol: "XAUUSD", category: "Metals" },
     { symbol: "XAGUSD", category: "Metals" },
+    { symbol: "SPX500", category: "Indices" },
+    { symbol: "NAS100", category: "Indices" },
+    { symbol: "US30", category: "Indices" },
     { symbol: "BTCUSD", category: "Crypto" },
     { symbol: "ETHUSD", category: "Crypto" },
-    { symbol: "US30", category: "Indices" },
-    { symbol: "NAS100", category: "Indices" },
-    { symbol: "SPX500", category: "Indices" },
 ];
 
-export type PairAnalysis = {
+export type AdvancedPairAnalysis = {
     symbol: string;
     category: string;
-    macro_snapshot: { risk_regime: string; usd_context: string; liquidity: string };
-    key_drivers: string[];
-    positioning: { cot_bias: string; flow_tone: string; overcrowded: boolean };
+    macro_score: number;
     bias: "BUY" | "SELL" | "NEUTRAL";
-    justification: string;
-    invalidation: string;
-    technical_confirmation: string;
+    conviction: "High" | "Medium" | "Low";
+    macro_snapshot: {
+        risk_regime: string;
+        usd_context: string;
+        liquidity: string;
+        rate_differential: string;
+    };
+    key_drivers: string[];
+    positioning: {
+        cot_bias: string;
+        cot_detail: string;
+        flow_tone: string;
+        overcrowded: boolean;
+        retail_sentiment: string;
+    };
+    central_bank_divergence: {
+        base_cb: string;
+        quote_cb: string;
+        verdict: string;
+    };
+    playbook: {
+        strategy: string;
+        key_resistance: string;
+        key_support: string;
+        invalidation: string;
+        optimal_session: string;
+    };
+    scenarios: {
+        bull_case: string;
+        bear_case: string;
+    };
+    catalyst_radar: {
+        upcoming_event: string;
+        expected_impact: string;
+        deviation_trigger: string;
+    };
+    institutional_brief: string;
 };
 
 const biasColors = {
@@ -53,12 +106,26 @@ const biasColors = {
     NEUTRAL: { text: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20" },
 };
 
+const convictionBadges = {
+    High: "bg-emerald-400/10 text-emerald-400 border-emerald-400/20",
+    Medium: "bg-amber-400/10 text-amber-400 border-amber-400/20",
+    Low: "bg-blue-400/10 text-blue-400 border-blue-400/20",
+};
+
 export default function MacroEngine() {
-    const [selectedPairs, setSelectedPairs] = useState<string[]>(["EURUSD", "XAUUSD", "BTCUSD"]);
+    const [selectedPairs, setSelectedPairs] = useState<string[]>(["EURUSD", "XAUUSD", "USDJPY"]);
+    const [activePreset, setActivePreset] = useState<string>("majors");
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [showCentralBanks, setShowCentralBanks] = useState(true);
     const [search, setSearch] = useState("");
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [results, setResults] = useState<PairAnalysis[]>([]);
+    const [analysisProgress, setAnalysisProgress] = useState<{ current: number; total: number; currentSymbol: string }>({
+        current: 0,
+        total: 0,
+        currentSymbol: "",
+    });
+    const [results, setResults] = useState<AdvancedPairAnalysis[]>([]);
+    const [copiedSymbol, setCopiedSymbol] = useState<string | null>(null);
     const { addToast } = useToast();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -81,28 +148,46 @@ export default function MacroEngine() {
         setSelectedPairs((prev) =>
             prev.includes(symbol) ? prev.filter((s) => s !== symbol) : [...prev, symbol]
         );
+        setActivePreset("custom");
+    };
+
+    const applyPreset = (preset: MacroPreset) => {
+        setSelectedPairs(preset.pairs);
+        setActivePreset(preset.id);
+        addToast(`Loaded ${preset.label} preset`, "info");
     };
 
     const runAnalysis = async () => {
+        if (selectedPairs.length === 0) return;
         setIsAnalyzing(true);
         setResults([]);
+        setAnalysisProgress({ current: 0, total: selectedPairs.length, currentSymbol: selectedPairs[0] });
+
+        const gatheredResults: AdvancedPairAnalysis[] = [];
 
         try {
-            const analysisResults = await Promise.all(
-                selectedPairs.map(async (symbol) => {
-                    const pair = allPairs.find(p => p.symbol === symbol);
-                    const response = await fetch("/api/ai/analyze-pair", {
-                        method: "POST",
-                        body: JSON.stringify({ symbol, category: pair?.category || "FX" }),
-                    });
+            for (let i = 0; i < selectedPairs.length; i++) {
+                const symbol = selectedPairs[i];
+                const pair = allPairs.find((p) => p.symbol === symbol);
+                setAnalysisProgress({ current: i + 1, total: selectedPairs.length, currentSymbol: symbol });
 
-                    if (!response.ok) throw new Error(`Failed to analyze ${symbol}`);
-                    return response.json();
-                })
-            );
+                const response = await fetch("/api/ai/analyze-pair", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ symbol, category: pair?.category || "FX" }),
+                });
 
-            setResults(analysisResults);
-            addToast("Macro analysis complete!", "success");
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Failed to analyze ${symbol}`);
+                }
+
+                const data: AdvancedPairAnalysis = await response.json();
+                gatheredResults.push(data);
+                setResults([...gatheredResults]);
+            }
+
+            addToast("Institutional Macro Analysis Complete!", "success");
         } catch (error: any) {
             console.error("Analysis Error:", error);
             addToast(error.message || "Failed to run analysis", "error");
@@ -111,85 +196,344 @@ export default function MacroEngine() {
         }
     };
 
-    const globalRegime = results.length > 0 ? results[0].macro_snapshot.risk_regime : null;
+    const copyInstitutionalBrief = (pair: AdvancedPairAnalysis) => {
+        const text = `📊 [PIPTAB INSTITUTIONAL MACRO BRIEF]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Asset: ${pair.symbol} (${pair.category})
+Bias: ${pair.bias} | Conviction: ${pair.conviction} | Macro Score: ${pair.macro_score}/100
+
+🏛️ CENTRAL BANK POLICY DIVERGENCE:
+• Base Policy: ${pair.central_bank_divergence.base_cb}
+• Quote Policy: ${pair.central_bank_divergence.quote_cb}
+• Differential Verdict: ${pair.central_bank_divergence.verdict}
+
+🎯 MACRO REGIME & FLOW:
+• Regime: ${pair.macro_snapshot.risk_regime}
+• USD Context: ${pair.macro_snapshot.usd_context}
+• Rate Spread: ${pair.macro_snapshot.rate_differential}
+• COT Positioning: ${pair.positioning.cot_bias} (${pair.positioning.cot_detail})
+• Retail Sentiment: ${pair.positioning.retail_sentiment}
+
+⚡ KEY DRIVERS:
+${pair.key_drivers.map((d) => `• ${d}`).join("\n")}
+
+⚔️ EXECUTION PLAYBOOK:
+• Strategy: ${pair.playbook.strategy}
+• Macro Resistance: ${pair.playbook.key_resistance}
+• Macro Support: ${pair.playbook.key_support}
+• Invalidation: ${pair.playbook.invalidation}
+• Optimal Session: ${pair.playbook.optimal_session}
+
+🚨 CATALYST RADAR:
+• Event: ${pair.catalyst_radar.upcoming_event} (${pair.catalyst_radar.expected_impact} Impact)
+• Deviation Trigger: ${pair.catalyst_radar.deviation_trigger}
+
+📝 INSTITUTIONAL SUMMARY:
+${pair.institutional_brief}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+        navigator.clipboard.writeText(text);
+        setCopiedSymbol(pair.symbol);
+        addToast(`Copied ${pair.symbol} Macro Brief to clipboard!`, "success");
+        setTimeout(() => setCopiedSymbol(null), 3000);
+    };
+
+    const globalRegime = results.length > 0 ? results[0].macro_snapshot.risk_regime : "Neutral Liquidity Environment";
 
     return (
         <div className="space-y-6">
-            {/* Header + Pair Selector */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-card border border-border/50 p-6">
-                <div className="flex items-center gap-2 mb-1">
-                    <Zap className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Macro Intelligence Engine</h3>
-                </div>
-                <p className="text-[11px] text-muted-foreground mb-4">Select pairs and trigger real-time AI-powered fundamental analysis</p>
+            {/* Global Macro Barometer */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl bg-card border border-border/50 p-5 shadow-sm space-y-4"
+            >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                            <Activity className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
+                                Global Macro & Cross-Asset Barometer
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">
+                                Real-time baseline macroeconomic anchors and liquidity conditions
+                            </p>
+                        </div>
+                    </div>
 
-                {/* Selected pairs chips */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/5 border border-accent/20 w-fit">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[11px] font-bold text-foreground">
+                            Regime: <span className="text-accent">{globalRegime}</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+                    {GLOBAL_MACRO_INDICATORS.map((ind) => (
+                        <div
+                            key={ind.id}
+                            className="p-3.5 rounded-xl bg-white/[0.02] border border-border/30 hover:border-accent/20 transition-all group"
+                        >
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                                    {ind.symbol}
+                                </span>
+                                <span
+                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${ind.status === "Bullish" || ind.status === "Risk-On"
+                                            ? "bg-emerald-500/10 text-emerald-400"
+                                            : ind.status === "Bearish" || ind.status === "Risk-Off"
+                                                ? "bg-red-500/10 text-red-400"
+                                                : "bg-white/5 text-muted-foreground"
+                                        }`}
+                                >
+                                    {ind.status}
+                                </span>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-base font-bold text-foreground font-['Montserrat']">
+                                    {ind.value}
+                                </span>
+                                <span
+                                    className={`text-[10px] font-semibold ${ind.change.startsWith("+")
+                                            ? "text-emerald-400"
+                                            : ind.change.startsWith("-")
+                                                ? "text-blue-400"
+                                                : "text-muted-foreground"
+                                        }`}
+                                >
+                                    {ind.change}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground/80 mt-1 line-clamp-1 group-hover:line-clamp-none transition-all">
+                                {ind.description}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </motion.div>
+
+            {/* Central Bank Policy Matrix (Collapsible) */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="rounded-2xl bg-card border border-border/50 overflow-hidden shadow-sm"
+            >
+                <button
+                    onClick={() => setShowCentralBanks(!showCentralBanks)}
+                    className="w-full px-5 py-4 flex items-center justify-between bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-border/30 text-left"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                            <Scale className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
+                                    Global Central Bank Policy Matrix
+                                </h3>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold">
+                                    G8 Economies
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">
+                                Benchmark interest rates, policy bias, and rate divergence differentials
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                        <span>{showCentralBanks ? "Hide Matrix" : "View Matrix"}</span>
+                        {showCentralBanks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                </button>
+
+                <AnimatePresence>
+                    {showCentralBanks && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-x-auto"
+                        >
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-border/20 text-[10px] uppercase font-semibold text-muted-foreground tracking-wider bg-white/[0.01]">
+                                        <th className="px-5 py-3">Central Bank</th>
+                                        <th className="px-4 py-3">Policy Rate</th>
+                                        <th className="px-4 py-3">Bias / Stance</th>
+                                        <th className="px-4 py-3">Trend</th>
+                                        <th className="px-4 py-3">Next Decision</th>
+                                        <th className="px-5 py-3">Key Focus Driver</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/20 text-xs font-medium">
+                                    {Object.entries(CENTRAL_BANKS).map(([curr, cb]) => (
+                                        <tr key={curr} className="hover:bg-white/[0.02] transition-colors">
+                                            <td className="px-5 py-3 flex items-center gap-2.5">
+                                                <span className="text-base">{cb.flag}</span>
+                                                <div>
+                                                    <span className="font-bold text-foreground">{cb.code}</span>
+                                                    <span className="text-[10px] text-muted-foreground ml-1.5">
+                                                        ({cb.currency})
+                                                    </span>
+                                                    <p className="text-[10px] text-muted-foreground/80">{cb.name}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="font-bold text-accent font-mono text-sm">
+                                                    {cb.rateDisplay}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cb.bias === "Hawkish"
+                                                            ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                                            : cb.bias === "Dovish"
+                                                                ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                                                : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                                        }`}
+                                                >
+                                                    {cb.bias}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="text-[11px] text-foreground font-semibold">
+                                                    {cb.trend}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-muted-foreground font-mono text-[11px]">
+                                                {cb.nextMeeting}
+                                            </td>
+                                            <td className="px-5 py-3 text-[11px] text-foreground/80 max-w-[280px]">
+                                                {cb.primaryDriver}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+
+            {/* Analysis Control Bar & Presets */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="rounded-2xl bg-card border border-border/50 p-6 space-y-5"
+            >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-accent" />
+                            <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
+                                Pair Analysis Engine
+                            </h3>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Select macro presets or customize your watchlist for multi-factor quantitative audit
+                        </p>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {MACRO_PRESETS.map((preset) => (
+                            <button
+                                key={preset.id}
+                                onClick={() => applyPreset(preset)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${activePreset === preset.id
+                                        ? "bg-accent text-accent-foreground border-accent shadow-sm"
+                                        : "bg-white/[0.02] border-border/50 text-muted-foreground hover:text-foreground hover:border-accent/30"
+                                    }`}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Pair selector chips & Add Button */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/20">
                     {selectedPairs.map((symbol) => {
                         const pair = allPairs.find((p) => p.symbol === symbol);
                         return (
                             <motion.div
                                 key={symbol}
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold"
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-border/50 text-foreground text-xs font-bold font-mono"
                             >
                                 <span>{symbol}</span>
-                                <span className="text-[9px] text-accent/60">{pair?.category}</span>
-                                <button onClick={() => togglePair(symbol)} className="ml-1 hover:text-red-400 transition-colors">
-                                    <X className="w-3 h-3" />
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/5 text-muted-foreground font-sans font-semibold">
+                                    {pair?.category}
+                                </span>
+                                <button
+                                    onClick={() => togglePair(symbol)}
+                                    className="ml-1 hover:text-red-400 text-muted-foreground transition-colors"
+                                >
+                                    <X className="w-3.5 h-3.5" />
                                 </button>
                             </motion.div>
                         );
                     })}
 
+                    {/* Add Pair Dropdown */}
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-border/50 text-muted-foreground text-xs font-medium hover:border-accent/30 hover:text-foreground transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-accent text-xs font-semibold hover:bg-accent/20 transition-all"
                         >
-                            + Add Pair
-                            <ChevronDown className={`w-3 h-3 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                            + Add Asset
+                            <ChevronDown
+                                className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                            />
                         </button>
 
                         <AnimatePresence>
                             {dropdownOpen && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -8 }}
+                                    initial={{ opacity: 0, y: -6 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-card border border-border/50 shadow-lg z-20 overflow-hidden"
+                                    exit={{ opacity: 0, y: -6 }}
+                                    className="absolute top-full left-0 mt-2 w-64 rounded-2xl bg-card border border-border/50 shadow-2xl z-30 overflow-hidden p-2 space-y-1.5"
                                 >
-                                    <div className="p-2 border-b border-border/30 flex items-center gap-2">
-                                        <div className="flex-1 flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5">
-                                            <Search className="w-3 h-3 text-muted-foreground" />
-                                            <input
-                                                type="text"
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
-                                                placeholder="Search pairs..."
-                                                className="bg-transparent text-xs text-foreground outline-none w-full"
-                                                autoFocus
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={() => setDropdownOpen(false)}
-                                            className="p-1.5 hover:bg-white/5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                        >
-                                            <X className="w-3 h-3" />
-                                        </button>
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-border/30">
+                                        <Search className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <input
+                                            type="text"
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            placeholder="Search pairs..."
+                                            className="bg-transparent text-xs text-foreground outline-none w-full"
+                                            autoFocus
+                                        />
                                     </div>
-                                    <div className="max-h-48 overflow-y-auto p-1">
+                                    <div className="max-h-52 overflow-y-auto pr-1 space-y-0.5">
                                         {filteredPairs.map((pair) => (
                                             <button
                                                 key={pair.symbol}
-                                                onClick={() => { togglePair(pair.symbol); setDropdownOpen(false); setSearch(""); }}
-                                                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-foreground hover:bg-white/5 transition-colors"
+                                                onClick={() => {
+                                                    togglePair(pair.symbol);
+                                                    setDropdownOpen(false);
+                                                    setSearch("");
+                                                }}
+                                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-foreground hover:bg-white/5 transition-colors"
                                             >
-                                                <span className="font-medium">{pair.symbol}</span>
-                                                <span className="text-[10px] text-muted-foreground">{pair.category}</span>
+                                                <span className="font-bold font-mono">{pair.symbol}</span>
+                                                <span className="text-[10px] text-muted-foreground font-semibold px-2 py-0.5 rounded bg-white/5">
+                                                    {pair.category}
+                                                </span>
                                             </button>
                                         ))}
+                                        {filteredPairs.length === 0 && (
+                                            <p className="text-[11px] text-muted-foreground text-center py-3">
+                                                All matching pairs selected
+                                            </p>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
@@ -197,119 +541,300 @@ export default function MacroEngine() {
                     </div>
                 </div>
 
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={runAnalysis}
-                    disabled={selectedPairs.length === 0 || isAnalyzing}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all font-['Montserrat'] ${selectedPairs.length === 0
-                        ? "bg-white/5 text-muted-foreground cursor-not-allowed"
-                        : "bg-accent text-accent-foreground hover:brightness-110"
-                        }`}
-                >
-                    <Zap className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
-                    {isAnalyzing ? "Analyzing..." : "RUN AI ANALYSIS"}
-                </motion.button>
+                {/* Run AI Analysis Action Button */}
+                <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <button
+                        onClick={runAnalysis}
+                        disabled={selectedPairs.length === 0 || isAnalyzing}
+                        className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all font-['Montserrat'] ${selectedPairs.length === 0
+                                ? "bg-white/5 text-muted-foreground cursor-not-allowed"
+                                : "bg-accent text-accent-foreground hover:brightness-110 shadow-lg shadow-accent/20 active:scale-[0.98]"
+                            }`}
+                    >
+                        <Zap className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
+                        {isAnalyzing
+                            ? `Auditing ${analysisProgress.currentSymbol} (${analysisProgress.current}/${analysisProgress.total})...`
+                            : `Run Institutional Audit (${selectedPairs.length} Pairs)`}
+                    </button>
+
+                    {isAnalyzing && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="font-semibold text-foreground">
+                                Step {analysisProgress.current} of {analysisProgress.total}
+                            </span>
+                            <div className="w-32 h-2 bg-white/5 rounded-full overflow-hidden border border-border/30">
+                                <motion.div
+                                    className="h-full bg-accent"
+                                    animate={{
+                                        width: `${(analysisProgress.current / analysisProgress.total) * 100}%`,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </motion.div>
 
-            {/* Global Risk Regime Banner */}
-            {globalRegime && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`rounded-xl p-4 flex items-center gap-3 border ${globalRegime.toLowerCase().includes("on") ? "bg-emerald-400/5 border-emerald-400/20" : globalRegime.toLowerCase().includes("off") ? "bg-red-400/5 border-red-400/20" : "bg-amber-400/5 border-amber-400/20"
-                        }`}
-                >
-                    <div className={`w-3 h-3 rounded-full animate-pulse ${globalRegime.toLowerCase().includes("on") ? "bg-emerald-400" : globalRegime.toLowerCase().includes("off") ? "bg-red-400" : "bg-amber-400"}`} />
-                    <div>
-                        <span className="text-xs font-semibold text-foreground">Global Risk Regime: </span>
-                        <span className={`text-xs font-bold ${globalRegime.toLowerCase().includes("on") ? "text-emerald-400" : globalRegime.toLowerCase().includes("off") ? "text-red-400" : "text-amber-400"}`}>{globalRegime}</span>
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Results */}
-            <div className="space-y-4">
+            {/* Analysis Results Display */}
+            <div className="space-y-6">
                 {results.map((pair, i) => {
                     const bc = biasColors[pair.bias] || biasColors.NEUTRAL;
+                    const isCopied = copiedSymbol === pair.symbol;
+
                     return (
                         <motion.div
                             key={pair.symbol}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            className={`rounded-2xl bg-card border ${bc.border} overflow-hidden`}
+                            transition={{ delay: i * 0.08 }}
+                            className={`rounded-2xl bg-card border ${bc.border} shadow-xl overflow-hidden`}
                         >
-                            <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                            {/* Card Header */}
+                            <div className="px-6 py-4 border-b border-border/30 flex flex-wrap items-center justify-between gap-3 bg-white/[0.01]">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-lg font-bold text-foreground font-['Montserrat']">{pair.symbol}</span>
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-medium">{pair.category}</span>
+                                    <span className="text-xl font-extrabold text-foreground font-mono tracking-tight">
+                                        {pair.symbol}
+                                    </span>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold uppercase">
+                                        {pair.category}
+                                    </span>
+                                    <span
+                                        className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${convictionBadges[pair.conviction] || convictionBadges.Medium
+                                            }`}
+                                    >
+                                        {pair.conviction} Conviction
+                                    </span>
                                 </div>
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${bc.bg} ${bc.text} text-sm font-bold`}>
-                                    {pair.bias === "BUY" ? <TrendingUp className="w-4 h-4" /> : pair.bias === "SELL" ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
-                                    {pair.bias}
+
+                                <div className="flex items-center gap-3">
+                                    {/* Macro Score Pill */}
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-border/40">
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">
+                                            Macro Score
+                                        </span>
+                                        <span className="text-sm font-extrabold text-foreground font-['Montserrat']">
+                                            {pair.macro_score}
+                                            <span className="text-[10px] text-muted-foreground font-normal">/100</span>
+                                        </span>
+                                    </div>
+
+                                    {/* Bias Badge */}
+                                    <div
+                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-xl ${bc.bg} ${bc.text} text-sm font-extrabold font-['Montserrat'] border ${bc.border}`}
+                                    >
+                                        {pair.bias === "BUY" ? (
+                                            <TrendingUp className="w-4 h-4" />
+                                        ) : pair.bias === "SELL" ? (
+                                            <TrendingDown className="w-4 h-4" />
+                                        ) : (
+                                            <Minus className="w-4 h-4" />
+                                        )}
+                                        {pair.bias}
+                                    </div>
+
+                                    {/* Copy Brief Button */}
+                                    <button
+                                        onClick={() => copyInstitutionalBrief(pair)}
+                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all border border-border/40"
+                                        title="Copy Institutional Macro Brief"
+                                    >
+                                        {isCopied ? (
+                                            <Check className="w-4 h-4 text-emerald-400" />
+                                        ) : (
+                                            <Copy className="w-4 h-4" />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="p-5 space-y-5">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {[
-                                        { label: "Risk Regime", value: pair.macro_snapshot.risk_regime },
-                                        { label: "USD Context", value: pair.macro_snapshot.usd_context },
-                                        { label: "Liquidity", value: pair.macro_snapshot.liquidity },
-                                    ].map((item) => (
-                                        <div key={item.label} className="rounded-xl bg-white/[0.02] p-3">
-                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{item.label}</p>
-                                            <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                            <div className="p-6 space-y-6">
+                                {/* 4 Macro Context Tiles */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-1">
+                                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-muted-foreground">
+                                            <span>Central Bank Spread</span>
+                                            <Scale className="w-3 h-3 text-accent" />
                                         </div>
-                                    ))}
+                                        <p className="text-xs font-bold text-foreground">
+                                            {pair.macro_snapshot.rate_differential}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/80">
+                                            {pair.central_bank_divergence.verdict}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-1">
+                                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-muted-foreground">
+                                            <span>Risk Regime</span>
+                                            <Globe2 className="w-3 h-3 text-emerald-400" />
+                                        </div>
+                                        <p className="text-xs font-bold text-foreground">
+                                            {pair.macro_snapshot.risk_regime}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/80">
+                                            Liquidity: {pair.macro_snapshot.liquidity}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-1">
+                                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-muted-foreground">
+                                            <span>COT Smart Money</span>
+                                            <Shield className="w-3 h-3 text-accent" />
+                                        </div>
+                                        <p className="text-xs font-bold text-foreground">
+                                            {pair.positioning.cot_bias}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/80 line-clamp-1">
+                                            {pair.positioning.cot_detail}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-1">
+                                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-muted-foreground">
+                                            <span>Crowded Trade?</span>
+                                            <AlertTriangle
+                                                className={`w-3 h-3 ${pair.positioning.overcrowded ? "text-amber-400" : "text-emerald-400"
+                                                    }`}
+                                            />
+                                        </div>
+                                        <p
+                                            className={`text-xs font-bold ${pair.positioning.overcrowded ? "text-amber-400" : "text-emerald-400"
+                                                }`}
+                                        >
+                                            {pair.positioning.overcrowded
+                                                ? "Squeeze Risk (Extreme Positioning)"
+                                                : "Balanced / Trend Room"}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/80">
+                                            Retail: {pair.positioning.retail_sentiment}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Key Drivers</p>
-                                    <div className="space-y-1.5">
-                                        {pair.key_drivers.map((d, di) => (
-                                            <div key={di} className="flex items-start gap-2 text-sm text-foreground/80">
-                                                <span className="text-accent mt-0.5 shrink-0">•</span>
-                                                <span>{d}</span>
+                                {/* Key Macro Drivers */}
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                        <Layers className="w-3 h-3 text-accent" />
+                                        Core Institutional Macro Drivers
+                                    </span>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                        {pair.key_drivers.map((driver, di) => (
+                                            <div
+                                                key={di}
+                                                className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.015] border border-border/20 text-xs text-foreground/90 leading-relaxed"
+                                            >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                                                <span>{driver}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="rounded-xl bg-white/[0.02] p-3">
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">COT Bias</p>
-                                        <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                                            <Shield className="w-3 h-3 text-accent" />
-                                            {pair.positioning.cot_bias}
-                                        </p>
+                                {/* Actionable Playbook & Key Macro Levels */}
+                                <div className="p-5 rounded-2xl bg-white/[0.02] border border-border/30 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-extrabold text-foreground uppercase tracking-wider flex items-center gap-2">
+                                            <Target className="w-3.5 h-3.5 text-accent" />
+                                            Actionable Execution Playbook
+                                        </span>
+                                        <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-accent/10 text-accent border border-accent/20">
+                                            Setup: {pair.playbook.strategy}
+                                        </span>
                                     </div>
-                                    <div className="rounded-xl bg-white/[0.02] p-3">
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Flow Tone</p>
-                                        <p className="text-sm text-foreground/80">{pair.positioning.flow_tone}</p>
-                                    </div>
-                                    <div className="rounded-xl bg-white/[0.02] p-3">
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Crowded?</p>
-                                        <p className={`text-sm font-semibold flex items-center gap-1.5 ${pair.positioning.overcrowded ? "text-amber-400" : "text-emerald-400"}`}>
-                                            {pair.positioning.overcrowded ? <><AlertTriangle className="w-3 h-3" /> Yes — Risk</> : "No"}
-                                        </p>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                        <div className="p-3 rounded-xl bg-white/5 border border-border/20">
+                                            <p className="text-[9px] uppercase font-bold text-muted-foreground mb-0.5">
+                                                Macro Resistance / Ceiling
+                                            </p>
+                                            <p className="text-xs font-bold text-foreground font-mono">
+                                                {pair.playbook.key_resistance}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 rounded-xl bg-white/5 border border-border/20">
+                                            <p className="text-[9px] uppercase font-bold text-muted-foreground mb-0.5">
+                                                Macro Support / Floor
+                                            </p>
+                                            <p className="text-xs font-bold text-foreground font-mono">
+                                                {pair.playbook.key_support}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                                            <p className="text-[9px] uppercase font-bold text-red-400 mb-0.5">
+                                                Hard Invalidation Trigger
+                                            </p>
+                                            <p className="text-xs font-bold text-foreground">
+                                                {pair.playbook.invalidation}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 rounded-xl bg-white/5 border border-border/20">
+                                            <p className="text-[9px] uppercase font-bold text-muted-foreground mb-0.5 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" /> Optimal Timing
+                                            </p>
+                                            <p className="text-xs font-bold text-foreground">
+                                                {pair.playbook.optimal_session}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className={`rounded-xl p-4 ${bc.bg} border ${bc.border}`}>
-                                    <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${bc.text}`}>Bias Justification</p>
-                                    <p className="text-sm text-foreground leading-relaxed">{pair.justification}</p>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="rounded-xl bg-red-400/5 border border-red-400/10 p-3">
-                                        <p className="text-[10px] text-red-400 uppercase tracking-wider font-semibold mb-1">Invalidation</p>
-                                        <p className="text-sm text-foreground/80">{pair.invalidation}</p>
+                                {/* Scenarios & Catalyst Radar */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Bull & Bear Scenarios */}
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-3">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            Scenario Matrix
+                                        </span>
+                                        <div className="space-y-2 text-xs">
+                                            <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                                                <span className="text-[10px] font-bold text-emerald-400 uppercase block mb-1">
+                                                    Bull Trajectory:
+                                                </span>
+                                                <p className="text-foreground/90 leading-relaxed">
+                                                    {pair.scenarios.bull_case}
+                                                </p>
+                                            </div>
+                                            <div className="p-2.5 rounded-lg bg-red-500/5 border border-red-500/20">
+                                                <span className="text-[10px] font-bold text-red-400 uppercase block mb-1">
+                                                    Bear Trajectory:
+                                                </span>
+                                                <p className="text-foreground/90 leading-relaxed">
+                                                    {pair.scenarios.bear_case}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="rounded-xl bg-blue-400/5 border border-blue-400/10 p-3">
-                                        <p className="text-[10px] text-blue-400 uppercase tracking-wider font-semibold mb-1">Technical Confirmation</p>
-                                        <p className="text-sm text-foreground/80">{pair.technical_confirmation}</p>
+
+                                    {/* Catalyst Radar */}
+                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-3 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                    Upcoming Catalyst Radar
+                                                </span>
+                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                    {pair.catalyst_radar.expected_impact} Impact
+                                                </span>
+                                            </div>
+                                            <h5 className="text-xs font-bold text-foreground">
+                                                {pair.catalyst_radar.upcoming_event}
+                                            </h5>
+                                            <p className="text-xs text-foreground/80 mt-2 leading-relaxed">
+                                                <span className="text-accent font-semibold">Deviation Rule: </span>
+                                                {pair.catalyst_radar.deviation_trigger}
+                                            </p>
+                                        </div>
+
+                                        <div className="pt-3 border-t border-border/20 flex items-center justify-between text-[10px] text-muted-foreground">
+                                            <span>Institutional Memo Attached</span>
+                                            <button
+                                                onClick={() => copyInstitutionalBrief(pair)}
+                                                className="text-accent font-semibold hover:underline flex items-center gap-1"
+                                            >
+                                                {isCopied ? "Copied Brief!" : "Copy Full Note"}
+                                                <Copy className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -320,10 +845,30 @@ export default function MacroEngine() {
 
             {/* Empty state */}
             {!isAnalyzing && results.length === 0 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 text-center">
-                    <Landmark className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                    <p className="text-sm text-muted-foreground font-['Montserrat'] mb-1">No analysis generated yet</p>
-                    <p className="text-[11px] text-muted-foreground/70">Select your pairs above and click <span className="text-accent font-semibold">RUN AI ANALYSIS</span></p>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-20 text-center rounded-2xl bg-card border border-border/30 p-8 space-y-4"
+                >
+                    <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center border border-accent/20">
+                        <Landmark className="w-8 h-8 text-accent" />
+                    </div>
+                    <div>
+                        <h4 className="text-base font-bold text-foreground font-['Montserrat']">
+                            No Macro Audit Generated Yet
+                        </h4>
+                        <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1">
+                            Choose a preset above (e.g. Major FX, High-Yield Carry, Safe Havens) or add custom assets,
+                            then click <span className="text-accent font-semibold">RUN INSTITUTIONAL AUDIT</span>.
+                        </p>
+                    </div>
+                    <button
+                        onClick={runAnalysis}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:brightness-110 shadow-lg shadow-accent/20 transition-all font-['Montserrat']"
+                    >
+                        <Zap className="w-3.5 h-3.5" />
+                        Audit Default Preset ({selectedPairs.length} Pairs)
+                    </button>
                 </motion.div>
             )}
         </div>

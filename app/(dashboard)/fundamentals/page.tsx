@@ -53,7 +53,7 @@ function FundamentalsContent() {
                         <Landmark className="w-5 h-5 text-accent" />
                         Intelligence Center
                     </h2>
-                    <p className="text-xs text-muted-foreground mt-1">Institutional-grade fundamental tools powered by Gemini 2.0</p>
+                    <p className="text-xs text-muted-foreground mt-1">Institutional-grade fundamental tools powered by Gemini 3.6</p>
                 </div>
 
                 <div className="flex items-center gap-1 p-1 bg-white/[0.03] border border-border/50 rounded-2xl overflow-x-auto max-w-full no-scrollbar">
