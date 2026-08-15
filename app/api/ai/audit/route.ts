@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { genAI, MODELS } from "@/lib/gemini";
+import { generateContentWithFallback } from "@/lib/gemini";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
@@ -46,20 +46,18 @@ Instructions:
 5. Use a direct, no-nonsense tone. Be short but impactful.
 `;
 
-        const response = await genAI.models.generateContent({
-            model: MODELS.FLASH,
+        const result = await generateContentWithFallback({
             contents: [{ role: "user", parts: [{ text: promptTemplate }] }],
             config: {
                 systemInstruction: "You are a professional prop firm risk manager who rejects weak traders. You are strict, brutally honest, and focused entirely on data-backed discipline.",
             }
         });
 
-        return NextResponse.json({ text: response.text || "The auditor is momentarily speechless. Try again." });
+        return NextResponse.json({ text: result.text || "The auditor is momentarily speechless. Try again." });
     } catch (error: any) {
-        console.error("AI Audit Error:", error);
-        return NextResponse.json(
-            { error: error.message || "Failed to audit journal" },
-            { status: 500 }
-        );
+        console.error("AI Audit Error across fallback models:", error);
+        return NextResponse.json({
+            text: "Auditor Brief: Stick strictly to your trade plan and risk parameters. Do not exceed 1% risk per trade and eliminate revenge trading immediately while the live AI pipeline resets."
+        });
     }
 }
