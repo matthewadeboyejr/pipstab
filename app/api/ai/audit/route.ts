@@ -2,6 +2,21 @@ import { NextResponse } from "next/server";
 import { generateContentWithFallback } from "@/lib/gemini";
 import { createClient } from "@/utils/supabase/server";
 
+export interface AuditReportData {
+    type: "structured" | "chat";
+    verdict_headline: string;
+    summary: string;
+    leaks_found: Array<{
+        title: string;
+        severity: "Critical" | "Warning" | "Notice";
+        trade_reference?: string;
+        breakdown: string;
+    }>;
+    directives: string[];
+    coaching_tip: string;
+    raw_text?: string;
+}
+
 export async function POST(req: Request) {
     const { message } = await req.json();
 
@@ -24,40 +39,92 @@ export async function POST(req: Request) {
             .order("date", { ascending: false })
             .limit(20);
 
-        const promptTemplate = `
-User Query: "${message}"
+        const tradeDataFormatted = trades && trades.length > 0
+            ? JSON.stringify(trades.map(t => ({
+                pair: t.pair,
+                direction: t.direction,
+                pnl: t.pnl,
+                setup: t.setup,
+                emotion: t.emotion,
+                rr: t.rr,
+                notes: t.notes
+            })), null, 2)
+            : "No trade logs found.";
 
-Context (Recent 20 Trades):
-${trades ? JSON.stringify(trades.map(t => ({
-    pair: t.pair,
-    direction: t.direction,
-    pnl: t.pnl,
-    setup: t.setup,
-    emotion: t.emotion,
-    rr: t.rr,
-    notes: t.notes
-})), null, 2) : "No trade history found."}
+        const prompt = `User Message: "${message}"
+
+Recent 20 Trade Logs for Context:
+${tradeDataFormatted}
 
 Instructions:
-1. You are a **Strict and Brutally Honest** Trading Performance Auditor.
-2. Your goal is to improve the user's edge by pointing out flaws in their discipline, risk management, and psychology.
-3. If the data shows bad habits (e.g., revenge trading, inconsistent R:R), call them out sharply. Do NOT sugar-coat.
-4. If the user asks for advice, give them actionable, high-performance coaching tips.
-5. Use a direct, no-nonsense tone. Be short but impactful.
-`;
+1. You are a **Strict, Brutally Honest Prop Firm Risk Director and Trading Auditor**.
+2. Never output a raw, chaotic wall of text. Always structure your findings into crisp, clean, digestible visual sections.
+3. If the user asks a greeting, casual question, or requests a trade audit, respond with institutional authority. Focus entirely on capital preservation, risk of ruin, psychology, and execution discipline.
+4. Extract specific trade quotes/notes from their logs to call out real flaws (gambling, revenge trading, FOMO, inconsistent R:R, taking low-probability setups).
+
+Return a valid JSON object strictly matching this format:
+{
+    "type": "structured",
+    "verdict_headline": string, // e.g. "Discipline Breakdown: High PnL is masking severe risk leaks"
+    "summary": string, // 1-2 punchy sentences with an executive audit verdict
+    "leaks_found": [
+        {
+            "title": string, // Short bold issue title (e.g. "Gambler's Mindset on V10")
+            "severity": "Critical" | "Warning" | "Notice",
+            "trade_reference": string, // Quote from trade logs or specific pair reference
+            "breakdown": string // Exact analytical explanation of why this destroys long-term edge
+        }
+    ],
+    "directives": string[], // Exactly 2-3 non-negotiable action items for their next session
+    "coaching_tip": string // One final powerful parting coaching principle
+}
+Return ONLY raw JSON.`;
 
         const result = await generateContentWithFallback({
-            contents: [{ role: "user", parts: [{ text: promptTemplate }] }],
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
             config: {
-                systemInstruction: "You are a professional prop firm risk manager who rejects weak traders. You are strict, brutally honest, and focused entirely on data-backed discipline.",
+                systemInstruction: "You are an elite prop firm risk director. You reject mediocrity and deliver highly organized, visual, data-backed trading performance audits.",
+                responseMimeType: "application/json",
             }
         });
 
-        return NextResponse.json({ text: result.text || "The auditor is momentarily speechless. Try again." });
+        const resultText = result.text || "";
+        let structuredData: AuditReportData;
+
+        try {
+            structuredData = JSON.parse(resultText);
+        } catch {
+            structuredData = {
+                type: "chat",
+                verdict_headline: "Performance Auditor Brief",
+                summary: resultText,
+                leaks_found: [],
+                directives: ["Maintain strict risk discipline", "Stick to A+ setups only"],
+                coaching_tip: "Trade the market in front of you, not your emotions.",
+                raw_text: resultText,
+            };
+        }
+
+        return NextResponse.json(structuredData);
     } catch (error: any) {
         console.error("AI Audit Error across fallback models:", error);
         return NextResponse.json({
-            text: "Auditor Brief: Stick strictly to your trade plan and risk parameters. Do not exceed 1% risk per trade and eliminate revenge trading immediately while the live AI pipeline resets."
+            type: "structured",
+            verdict_headline: "Risk Protocol Alert",
+            summary: "Maintain strict capital preservation rules while the real-time AI pipeline resets.",
+            leaks_found: [
+                {
+                    title: "Risk-Per-Trade Rule",
+                    severity: "Critical",
+                    trade_reference: "General Journal Baseline",
+                    breakdown: "Never exceed 1.0% account risk on any single trade setup.",
+                }
+            ],
+            directives: [
+                "Cap maximum daily drawdown at 2.0%",
+                "Zero tolerance for revenge trading after a stopped-out position",
+            ],
+            coaching_tip: "Professional traders manage risk; amateurs chase profits.",
         });
     }
 }
