@@ -230,6 +230,9 @@ ${pair.key_drivers.map((d) => `• ${d}`).join("\n")}
 
 📝 INSTITUTIONAL SUMMARY:
 ${pair.institutional_brief}
+
+⚠️ RISK & COMPLIANCE DISCLAIMER:
+This analysis is generated for educational, informational, and research purposes only and does not constitute financial, investment, or trading advice. Trading foreign exchange, commodities, equity indices, and digital assets involves significant risk of capital loss. PipTab does not guarantee future market outcomes. Always apply strict risk management.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
         navigator.clipboard.writeText(text);
@@ -837,6 +840,14 @@ ${pair.institutional_brief}
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Disclaimer on Card */}
+                                <div className="pt-3 border-t border-border/20 flex items-center gap-2 text-[10px] text-muted-foreground/80 bg-white/[0.015] px-3.5 py-2 rounded-xl">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+                                    <span>
+                                        <strong>Risk Disclaimer:</strong> Macro score, conviction bias, and playbook scenarios are AI-generated for educational and research purposes only. Not financial or trading advice.
+                                    </span>
+                                </div>
                             </div>
                         </motion.div>
                     );
@@ -871,6 +882,17 @@ ${pair.institutional_brief}
                     </button>
                 </motion.div>
             )}
+
+            {/* Global Regulatory & Risk Disclosure Banner */}
+            <div className="p-4 rounded-2xl bg-white/[0.015] border border-border/30 text-center space-y-1.5">
+                <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-muted-foreground">
+                    <Shield className="w-3.5 h-3.5 text-accent" />
+                    <span>Institutional Research & Risk Disclaimer</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 max-w-2xl mx-auto leading-relaxed">
+                    All macroeconomic intelligence, central bank rate matrices, COT positioning statistics, and AI trade biases provided by PipTab are strictly for educational, analytical, and journaling purposes. Financial market speculation involves substantial risk of loss. PipTab is not a registered financial advisor or broker.
+                </p>
+            </div>
         </div>
     );
 }
