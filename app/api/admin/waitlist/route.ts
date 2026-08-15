@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, logAdminAction } from "@/lib/admin/auth";
 import { createClient } from "@/utils/supabase/server";
+import { sendEarlyAccessInviteEmail } from "@/lib/email/brevo";
 
 export async function GET(req: Request) {
     try {
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
     try {
         const { user: adminUser } = await requireAdmin();
-        const { id, status } = await req.json();
+        const { id, status, sendEmail = false } = await req.json();
 
         if (!id || !status) {
             return NextResponse.json({ error: "id and status are required" }, { status: 400 });
@@ -49,24 +50,60 @@ export async function PATCH(req: Request) {
 
         const supabase = await createClient();
 
-        const { error } = await supabase
+        // 1. Fetch lead details
+        const { data: lead, error: fetchErr } = await supabase
+            .from("early_access")
+            .select("id, full_name, email, market")
+            .eq("id", id)
+            .single();
+
+        if (fetchErr || !lead) {
+            return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+        }
+
+        // 2. Update status in database
+        const { error: updateErr } = await supabase
             .from("early_access")
             .update({ status })
             .eq("id", id);
 
-        if (error) throw error;
+        if (updateErr) throw updateErr;
 
-        // Log audit trail
+        let emailResult: { success: boolean; messageId?: string; error?: string } = {
+            success: false,
+            error: "Email not requested",
+        };
+
+        // 3. Send automated Brevo email if requested or if status is 'invited' / 'approved'
+        if (sendEmail) {
+            emailResult = await sendEarlyAccessInviteEmail({
+                email: lead.email,
+                fullName: lead.full_name || "Trader",
+            });
+        }
+
+        // 4. Log audit trail
         await logAdminAction({
             adminId: adminUser.id,
             adminEmail: adminUser.email,
-            action: "UPDATE_WAITLIST_STATUS",
+            action: sendEmail ? "APPROVE_AND_SEND_INVITE_EMAIL" : "UPDATE_WAITLIST_STATUS",
             targetType: "early_access",
             targetId: id,
-            metadata: { new_status: status },
+            metadata: {
+                new_status: status,
+                email_sent: emailResult.success,
+                email_error: emailResult.error,
+                lead_email: lead.email,
+            },
         });
 
-        return NextResponse.json({ success: true, message: `Waitlist entry updated to ${status}` });
+        return NextResponse.json({
+            success: true,
+            message: sendEmail && emailResult.success
+                ? `Lead status updated to ${status} and invitation email dispatched via Brevo!`
+                : `Lead status updated to ${status}.${emailResult.error ? ` (Email notice: ${emailResult.error})` : ""}`,
+            emailResult,
+        });
     } catch (error: any) {
         console.error("Update Waitlist Error:", error);
         return NextResponse.json(

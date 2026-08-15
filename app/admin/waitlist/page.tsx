@@ -10,8 +10,9 @@ import {
     CheckCircle2,
     Clock,
     XCircle,
-    UserCheck,
     Send,
+    Sparkles,
+    Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/context/ToastContext";
@@ -21,6 +22,7 @@ export default function AdminWaitlistPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [isLoading, setIsLoading] = useState(true);
+    const [sendingId, setSendingId] = useState<string | null>(null);
     const { addToast } = useToast();
 
     const fetchWaitlist = async () => {
@@ -52,19 +54,31 @@ export default function AdminWaitlistPage() {
         fetchWaitlist();
     };
 
-    const handleStatusUpdate = async (id: string, newStatus: string) => {
+    const handleStatusUpdate = async (id: string, newStatus: string, sendEmail = false) => {
+        setSendingId(id);
         try {
             const res = await fetch("/api/admin/waitlist", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, status: newStatus }),
+                body: JSON.stringify({ id, status: newStatus, sendEmail }),
             });
 
-            if (!res.ok) throw new Error("Failed to update status");
-            addToast(`Lead status updated to ${newStatus}`, "success");
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to update status");
+
+            if (sendEmail && data.emailResult?.success) {
+                addToast("Approved & sent Brevo welcome email!", "success");
+            } else if (sendEmail && data.emailResult?.error) {
+                addToast(`Status updated, but email notice: ${data.emailResult.error}`, "info");
+            } else {
+                addToast(`Lead status updated to ${newStatus}`, "success");
+            }
+
             fetchWaitlist();
         } catch (error: any) {
             addToast(error.message || "Failed to update status", "error");
+        } finally {
+            setSendingId(null);
         }
     };
 
@@ -105,7 +119,7 @@ export default function AdminWaitlistPage() {
                         Early Access Lead Manager
                     </h1>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                        Triage incoming waitlist registrations, approve beta traders, and export leads for email campaigns
+                        Triage waitlist registrations, dispatch automated Brevo welcome emails, and export leads to CSV
                     </p>
                 </div>
 
@@ -173,55 +187,72 @@ export default function AdminWaitlistPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/20 text-xs font-medium">
-                            {waitlist.map((lead: any) => (
-                                <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="px-6 py-4 font-bold text-foreground">
-                                        {lead.full_name}
-                                    </td>
-                                    <td className="px-4 py-4 text-foreground/80 font-mono">
-                                        {lead.email}
-                                    </td>
-                                    <td className="px-4 py-4">
-                                        <span className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] font-semibold text-muted-foreground">
-                                            {lead.market || "General"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-4">
-                                        <span
-                                            className={`text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
-                                                lead.status === "approved" || lead.status === "invited"
-                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                            }`}
-                                        >
-                                            {lead.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-4 text-muted-foreground">
-                                        {lead.created_at ? format(new Date(lead.created_at), "MMM d, yyyy") : "—"}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            {lead.status === "pending" && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(lead.id, "approved")}
-                                                    className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-all"
-                                                >
-                                                    Approve
-                                                </button>
-                                            )}
-                                            {lead.status === "approved" && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(lead.id, "invited")}
-                                                    className="px-2.5 py-1 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent border border-accent/40 text-xs font-semibold transition-all"
-                                                >
-                                                    Mark Invited
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {waitlist.map((lead: any) => {
+                                const isBusy = sendingId === lead.id;
+                                return (
+                                    <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-6 py-4 font-bold text-foreground">
+                                            {lead.full_name}
+                                        </td>
+                                        <td className="px-4 py-4 text-foreground/80 font-mono">
+                                            {lead.email}
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] font-semibold text-muted-foreground">
+                                                {lead.market || "General"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <span
+                                                className={`text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                                                    lead.status === "approved" || lead.status === "invited"
+                                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                                }`}
+                                            >
+                                                {lead.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-muted-foreground">
+                                            {lead.created_at ? format(new Date(lead.created_at), "MMM d, yyyy") : "—"}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {lead.status === "pending" && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(lead.id, "approved", true)}
+                                                        disabled={isBusy}
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:brightness-110 transition-all font-['Montserrat'] shadow-sm disabled:opacity-50"
+                                                    >
+                                                        {isBusy ? (
+                                                            <>
+                                                                <RefreshCcw className="w-3 h-3 animate-spin" />
+                                                                <span>Sending...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Send className="w-3 h-3" />
+                                                                <span>Approve & Send Invite</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+
+                                                {lead.status === "approved" && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(lead.id, "invited", true)}
+                                                        disabled={isBusy}
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-border/40 text-xs font-semibold text-foreground transition-all disabled:opacity-50"
+                                                    >
+                                                        <Send className="w-3 h-3 text-accent" />
+                                                        <span>Resend Invite</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
 
                             {waitlist.length === 0 && !isLoading && (
                                 <tr>
