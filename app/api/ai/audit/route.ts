@@ -18,7 +18,7 @@ export interface AuditReportData {
 }
 
 export async function POST(req: Request) {
-    const { message } = await req.json();
+    const { message, tone = "brutal" } = await req.json();
 
     if (!message) {
         return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -51,31 +51,39 @@ export async function POST(req: Request) {
             })), null, 2)
             : "No trade logs found.";
 
+        let toneInstruction = "You are a **Strict, Brutally Honest Prop Firm Risk Director**. Zero sugar-coating, zero tolerance for gambler mentality, revenge trading, or sloppy execution. Be direct, sharp, and uncompromising.";
+        if (tone === "constructive") {
+            toneInstruction = "You are a **Constructive & Analytical Senior Strategy Coach**. Deliver objective, data-backed analysis, balancing critique of leaks with clear strategic optimization.";
+        } else if (tone === "supportive") {
+            toneInstruction = "You are an **Encouraging, Growth-Mindset Trading Psychology Mentor**. Emphasize emotional regulation, positive habit reinforcement, and constructive step-by-step progress.";
+        }
+
         const prompt = `User Message: "${message}"
+Auditor Tone Mode: ${tone.toUpperCase()}
 
 Recent 20 Trade Logs for Context:
 ${tradeDataFormatted}
 
 Instructions:
-1. You are a **Strict, Brutally Honest Prop Firm Risk Director and Trading Auditor**.
+1. ${toneInstruction}
 2. Never output a raw, chaotic wall of text. Always structure your findings into crisp, clean, digestible visual sections.
-3. If the user asks a greeting, casual question, or requests a trade audit, respond with institutional authority. Focus entirely on capital preservation, risk of ruin, psychology, and execution discipline.
-4. Extract specific trade quotes/notes from their logs to call out real flaws (gambling, revenge trading, FOMO, inconsistent R:R, taking low-probability setups).
+3. If the user asks a greeting, casual question, or requests a trade audit, respond with appropriate persona authority. Focus on capital preservation, risk of ruin, psychology, and execution discipline.
+4. Extract specific trade quotes/notes from their logs to address real habits.
 
 Return a valid JSON object strictly matching this format:
 {
     "type": "structured",
-    "verdict_headline": string, // e.g. "Discipline Breakdown: High PnL is masking severe risk leaks"
-    "summary": string, // 1-2 punchy sentences with an executive audit verdict
+    "verdict_headline": string, // Short punchy headline reflecting the audit tone
+    "summary": string, // 1-2 sentences with an executive audit verdict
     "leaks_found": [
         {
             "title": string, // Short bold issue title (e.g. "Gambler's Mindset on V10")
             "severity": "Critical" | "Warning" | "Notice",
             "trade_reference": string, // Quote from trade logs or specific pair reference
-            "breakdown": string // Exact analytical explanation of why this destroys long-term edge
+            "breakdown": string // Analytical explanation matching the chosen tone
         }
     ],
-    "directives": string[], // Exactly 2-3 non-negotiable action items for their next session
+    "directives": string[], // Exactly 2-3 actionable guidelines for their next session
     "coaching_tip": string // One final powerful parting coaching principle
 }
 Return ONLY raw JSON.`;
@@ -83,7 +91,7 @@ Return ONLY raw JSON.`;
         const result = await generateContentWithFallback({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             config: {
-                systemInstruction: "You are an elite prop firm risk director. You reject mediocrity and deliver highly organized, visual, data-backed trading performance audits.",
+                systemInstruction: toneInstruction,
                 responseMimeType: "application/json",
             }
         });

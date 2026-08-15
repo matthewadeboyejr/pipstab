@@ -19,6 +19,8 @@ import {
     Zap,
     Scale,
     Shield,
+    ChevronDown,
+    HeartHandshake,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { AuditReportData } from "@/app/api/ai/audit/route";
@@ -31,8 +33,44 @@ type Message = {
     timestamp: Date;
 };
 
+type AuditorTone = "brutal" | "constructive" | "supportive";
+
+const TONE_OPTIONS: Array<{
+    id: AuditorTone;
+    label: string;
+    subtitle: string;
+    badgeStyle: string;
+    icon: typeof AlertTriangle;
+    accentColor: string;
+}> = [
+    {
+        id: "brutal",
+        label: "Zero Sugar-Coating",
+        subtitle: "Brutally honest prop firm risk director",
+        badgeStyle: "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20",
+        icon: AlertTriangle,
+        accentColor: "text-red-400",
+    },
+    {
+        id: "constructive",
+        label: "Constructive & Analytical",
+        subtitle: "Balanced senior quantitative strategy coach",
+        badgeStyle: "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20",
+        icon: Scale,
+        accentColor: "text-amber-400",
+    },
+    {
+        id: "supportive",
+        label: "Supportive & Mentoring",
+        subtitle: "Encouraging psychology & habit mentor",
+        badgeStyle: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20",
+        icon: HeartHandshake,
+        accentColor: "text-emerald-400",
+    },
+];
+
 const PROMPT_STARTERS = [
-    { label: "🔍 Full Performance Audit", prompt: "Conduct a full, brutally honest performance audit on my recent trade logs." },
+    { label: "🔍 Full Performance Audit", prompt: "Conduct a full performance audit on my recent trade logs." },
     { label: "⚠️ Find My Biggest Risk Leak", prompt: "What is the single biggest risk management leak or bad habit in my journal?" },
     { label: "🧠 Check for Revenge Trading", prompt: "Analyze my trade timing and emotional notes: Am I revenge trading or forcing setups?" },
     { label: "🎯 Review Discipline & R:R", prompt: "Audit my Risk-to-Reward discipline and adherence to trade plans." },
@@ -46,7 +84,7 @@ export default function JournalAuditor() {
             report: {
                 type: "structured",
                 verdict_headline: "Performance Auditor Standing By",
-                summary: "I have direct access to your recent trade journal logs. I don't give praise for average work—I expose psychological leaks, gambler habits, and risk mismanagement.",
+                summary: "I have direct access to your recent trade journal logs. Select your coaching mode on the top-right to adjust my feedback style, and let's address your execution discipline.",
                 leaks_found: [],
                 directives: [
                     "Ask for a full audit of your latest trades",
@@ -59,9 +97,26 @@ export default function JournalAuditor() {
     ]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedTone, setSelectedTone] = useState<AuditorTone>("brutal");
+    const [toneDropdownOpen, setToneDropdownOpen] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const toneDropdownRef = useRef<HTMLDivElement>(null);
     const { addToast } = useToast();
+
+    const currentToneConfig = TONE_OPTIONS.find((t) => t.id === selectedTone) || TONE_OPTIONS[0];
+    const ToneIcon = currentToneConfig.icon;
+
+    // Close tone dropdown on outside click
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (toneDropdownRef.current && !toneDropdownRef.current.contains(event.target as Node)) {
+                setToneDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -88,7 +143,7 @@ export default function JournalAuditor() {
             const response = await fetch("/api/ai/audit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: textToSend }),
+                body: JSON.stringify({ message: textToSend, tone: selectedTone }),
             });
 
             if (!response.ok) throw new Error("Auditor failed to respond");
@@ -114,6 +169,7 @@ export default function JournalAuditor() {
     const copyAuditReport = (report: AuditReportData, msgId: string) => {
         const text = `📋 [PIPTAB TRADING PERFORMANCE AUDIT]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Mode: ${currentToneConfig.label}
 Verdict: ${report.verdict_headline}
 Summary: ${report.summary}
 
@@ -141,7 +197,7 @@ Performance audits are strictly for self-reflection and risk awareness. Not fina
     return (
         <div className="flex flex-col h-[750px] rounded-2xl bg-card border border-border/50 overflow-hidden shadow-xl">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-border/30 bg-emerald-500/[0.03] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-border/30 bg-emerald-500/[0.03] flex items-center justify-between relative z-20">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                         <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -161,11 +217,74 @@ Performance audits are strictly for self-reflection and risk awareness. Not fina
                     </div>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-[10px] text-red-400 font-extrabold uppercase tracking-wide">
-                        Zero Sugar-Coating
-                    </span>
+                {/* Interactive Coaching Mode Selector */}
+                <div className="relative" ref={toneDropdownRef}>
+                    <button
+                        onClick={() => setToneDropdownOpen(!toneDropdownOpen)}
+                        className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${currentToneConfig.badgeStyle}`}
+                    >
+                        <ToneIcon className="w-3.5 h-3.5" />
+                        <span>{currentToneConfig.label}</span>
+                        <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                toneDropdownOpen ? "rotate-180" : ""
+                            }`}
+                        />
+                    </button>
+
+                    <AnimatePresence>
+                        {toneDropdownOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-card border border-border/50 shadow-2xl p-2 z-50 space-y-1"
+                            >
+                                <div className="px-3 py-1.5 border-b border-border/20 mb-1">
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                                        Select Coaching Style
+                                    </span>
+                                </div>
+
+                                {TONE_OPTIONS.map((tone) => {
+                                    const Icon = tone.icon;
+                                    const isSelected = selectedTone === tone.id;
+                                    return (
+                                        <button
+                                            key={tone.id}
+                                            onClick={() => {
+                                                setSelectedTone(tone.id);
+                                                setToneDropdownOpen(false);
+                                                addToast(`Auditor Mode: ${tone.label}`, "info");
+                                            }}
+                                            className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left transition-all ${
+                                                isSelected
+                                                    ? "bg-white/10 border border-border/50 text-foreground"
+                                                    : "hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                                            }`}
+                                        >
+                                            <div className={`p-1.5 rounded-lg bg-white/5 ${tone.accentColor} mt-0.5`}>
+                                                <Icon className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-foreground">
+                                                        {tone.label}
+                                                    </span>
+                                                    {isSelected && (
+                                                        <Check className="w-3.5 h-3.5 text-accent" />
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                                                    {tone.subtitle}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -286,7 +405,7 @@ Performance audits are strictly for self-reflection and risk awareness. Not fina
                                                 <div className="p-4 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/20 space-y-2.5">
                                                     <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 font-['Montserrat']">
                                                         <Target className="w-3.5 h-3.5" />
-                                                        Non-Negotiable Directives for Next Session
+                                                        Actionable Directives for Next Session
                                                     </span>
 
                                                     <div className="space-y-2">
@@ -361,7 +480,7 @@ Performance audits are strictly for self-reflection and risk awareness. Not fina
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask the Performance Auditor about leaks, setups, or risk..."
+                        placeholder={`Ask the Auditor (${currentToneConfig.label} mode)...`}
                         className="w-full pl-4 pr-12 py-3 rounded-xl bg-white/[0.03] border border-border/50 text-xs focus:border-accent/40 outline-none transition-all placeholder:text-muted-foreground text-foreground"
                     />
                     <button
@@ -374,7 +493,7 @@ Performance audits are strictly for self-reflection and risk awareness. Not fina
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
-                    <span>AI Auditor cross-references your live trade logs automatically.</span>
+                    <span>AI Auditor cross-references your live trade logs automatically in {currentToneConfig.label} mode.</span>
                     <span className="flex items-center gap-1">
                         <Shield className="w-3 h-3 text-accent" /> For educational self-audit only.
                     </span>
