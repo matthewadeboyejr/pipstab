@@ -14,7 +14,7 @@ export async function sendEarlyAccessInviteEmail({
     appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://piptab.com",
 }: SendInviteParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
     const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || "support@piptab.com";
+    const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
     const senderName = process.env.BREVO_SENDER_NAME || "PipTab Team";
 
     if (!apiKey) {
