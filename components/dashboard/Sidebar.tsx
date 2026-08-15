@@ -18,6 +18,7 @@ import {
     Zap,
     ListChecks,
     AlertTriangle,
+    Shield,
 } from "lucide-react";
 
 const navSections = [
@@ -55,6 +56,7 @@ export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [hasCheckedIn, setHasCheckedIn] = useState<boolean>(true); // Default true to prevent flash
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchUserAndStatus = async () => {
@@ -62,6 +64,17 @@ export default function Sidebar() {
             setUser(user);
 
             if (user) {
+                // Check if admin role
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.role === 'admin') {
+                    setIsAdmin(true);
+                }
+
                 // Check if they have a check-in for today
                 const todayStr = new Date().toISOString().split('T')[0];
                 const { data } = await supabase
@@ -219,6 +232,30 @@ export default function Sidebar() {
                         </ul>
                     </div>
                 ))}
+
+                {isAdmin && (
+                    <div className="pt-2">
+                        <Link
+                            href="/admin"
+                            className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 transition-all shadow-sm"
+                        >
+                            <Shield className="w-4 h-4 shrink-0 text-accent" />
+                            <AnimatePresence>
+                                {!collapsed && (
+                                    <motion.span
+                                        initial={{ opacity: 0, width: 0 }}
+                                        animate={{ opacity: 1, width: "auto" }}
+                                        exit={{ opacity: 0, width: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="relative z-10 whitespace-nowrap overflow-hidden"
+                                    >
+                                        Command Center
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
+                        </Link>
+                    </div>
+                )}
             </nav>
 
             {/* Bottom actions */}
