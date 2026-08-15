@@ -16,8 +16,8 @@ export const isConfigured = !!process.env.GEMINI_API_KEY;
  * Common model names for easy reference
  */
 export const MODELS = {
-    FLASH: "gemini-2.0-flash",
-    PRO: "gemini-2.0-pro",
+    FLASH: "gemini-3.6-flash",
+    PRO: "gemini-3.1-pro-preview",
 };
 
 /**
