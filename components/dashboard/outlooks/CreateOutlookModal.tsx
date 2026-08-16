@@ -194,10 +194,10 @@ export default function CreateOutlookModal({
                 itf_narrative: itfNarrative.trim() || null,
                 ltf_narrative: ltfNarrative.trim() || null,
                 poi_narrative: poiNarrative.trim() || null,
-                htf_images: JSON.stringify(htfImages),
-                itf_images: JSON.stringify(itfImages),
-                ltf_images: JSON.stringify(ltfImages),
-                poi_images: JSON.stringify(poiImages),
+                htf_images: htfImages,
+                itf_images: itfImages,
+                ltf_images: ltfImages,
+                poi_images: poiImages,
                 updated_at: new Date().toISOString(),
             };
 
