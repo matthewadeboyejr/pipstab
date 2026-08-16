@@ -24,6 +24,7 @@ import {
     CheckCircle2,
 } from "lucide-react";
 import CreateOutlookModal, { OutlookItem } from "./CreateOutlookModal";
+import OutlookDossierModal from "./OutlookDossierModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/context/ToastContext";
@@ -54,6 +55,7 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingOutlook, setEditingOutlook] = useState<OutlookItem | null>(null);
     const [deletingOutlookId, setDeletingOutlookId] = useState<string | null>(null);
+    const [dossierOutlook, setDossierOutlook] = useState<OutlookItem | null>(null);
 
     // Active timeframe stage per card: Record<outlookId, "htf" | "itf" | "ltf" | "poi">
     const [activeStages, setActiveStages] = useState<Record<string, "htf" | "itf" | "ltf" | "poi">>({});
@@ -303,10 +305,19 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
                                     </div>
 
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono mr-2">
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono mr-1">
                                             <Calendar className="w-3.5 h-3.5" />
                                             <span>{formattedDate}</span>
                                         </div>
+
+                                        <button
+                                            onClick={() => setDossierOutlook(outlook)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs font-bold text-accent hover:bg-accent/20 transition-all mr-1"
+                                            title="Export PDF / Share Dossier"
+                                        >
+                                            <Share2 className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">Export PDF</span>
+                                        </button>
 
                                         <button
                                             onClick={() => {
@@ -442,6 +453,13 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
                 }}
                 onSuccess={handleRefresh}
                 outlookToEdit={editingOutlook}
+            />
+
+            {/* Outlook Dossier / PDF Modal */}
+            <OutlookDossierModal
+                open={!!dossierOutlook}
+                onClose={() => setDossierOutlook(null)}
+                outlook={dossierOutlook}
             />
 
             {/* Delete Confirmation Modal */}
