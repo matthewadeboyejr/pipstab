@@ -83,10 +83,17 @@ export default function OutlookDossierModal({
         setIsGeneratingImage(true);
 
         try {
-            const dataUrl = await toPng(dossierRef.current, {
+            const node = dossierRef.current;
+            const dataUrl = await toPng(node, {
                 quality: 1,
                 pixelRatio: 2,
                 cacheBust: true,
+                backgroundColor: isLightMode ? "#F8FAFC" : "#070A11",
+                height: node.scrollHeight,
+                style: {
+                    maxHeight: "none",
+                    overflow: "visible",
+                },
             });
 
             const link = document.createElement("a");
@@ -94,7 +101,7 @@ export default function OutlookDossierModal({
             link.href = dataUrl;
             link.click();
 
-            addToast("High-resolution strategy dossier downloaded", "success");
+            addToast("Full high-resolution strategy dossier downloaded", "success");
         } catch (err: any) {
             console.error("Export image failed:", err);
             addToast("Failed to generate image. Please use PDF Print.", "error");
@@ -202,23 +209,24 @@ Generated via PipTab Analytics Platform`;
                     </div>
                 </div>
 
-                {/* Printable Document Container */}
+                {/* Printable & Scrollable Document Container */}
                 <div
-                    ref={dossierRef}
-                    className={`p-6 sm:p-10 overflow-y-auto space-y-8 custom-scrollbar transition-colors duration-200 ${
+                    className={`overflow-y-auto custom-scrollbar transition-colors duration-200 ${
                         isLightMode
                             ? "bg-[#F8FAFC] text-[#0F172A]"
                             : "bg-[#070A11] text-[#E2E8F0]"
                     }`}
                 >
-                    {/* 1. Executive Top Dossier Banner */}
-                    <div
-                        className={`p-6 rounded-2xl border transition-all ${
-                            isLightMode
-                                ? "bg-white border-slate-200 shadow-sm"
-                                : "bg-gradient-to-b from-[#111827] to-[#0D1320] border-border/60 shadow-xl"
-                        }`}
-                    >
+                    {/* Capture target container (dossierRef) */}
+                    <div ref={dossierRef} className="p-6 sm:p-10 space-y-8 w-full max-w-[1200px] mx-auto">
+                        {/* 1. Executive Top Dossier Banner */}
+                        <div
+                            className={`p-6 rounded-2xl border transition-all ${
+                                isLightMode
+                                    ? "bg-white border-slate-200 shadow-sm"
+                                    : "bg-gradient-to-b from-[#111827] to-[#0D1320] border-border/60 shadow-xl"
+                            }`}
+                        >
                         {/* Top Line: Brand & Metadata */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-border/30">
                             <div className="flex items-center gap-3">
@@ -312,7 +320,7 @@ Generated via PipTab Analytics Platform`;
 
                                 {htfImgs.length > 0 && (
                                     <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
-                                        <img src={htfImgs[0]} alt="HTF Chart" className="w-full h-full object-cover" />
+                                        <img src={htfImgs[0]} crossOrigin="anonymous" alt="HTF Chart" className="w-full h-full object-cover" />
                                     </div>
                                 )}
 
@@ -359,7 +367,7 @@ Generated via PipTab Analytics Platform`;
 
                                 {itfImgs.length > 0 && (
                                     <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
-                                        <img src={itfImgs[0]} alt="ITF Chart" className="w-full h-full object-cover" />
+                                        <img src={itfImgs[0]} crossOrigin="anonymous" alt="ITF Chart" className="w-full h-full object-cover" />
                                     </div>
                                 )}
 
@@ -406,7 +414,7 @@ Generated via PipTab Analytics Platform`;
 
                                 {ltfImgs.length > 0 && (
                                     <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
-                                        <img src={ltfImgs[0]} alt="LTF Chart" className="w-full h-full object-cover" />
+                                        <img src={ltfImgs[0]} crossOrigin="anonymous" alt="LTF Chart" className="w-full h-full object-cover" />
                                     </div>
                                 )}
 
@@ -453,7 +461,7 @@ Generated via PipTab Analytics Platform`;
 
                                 {poiImgs.length > 0 && (
                                     <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
-                                        <img src={poiImgs[0]} alt="POI Chart" className="w-full h-full object-cover" />
+                                        <img src={poiImgs[0]} crossOrigin="anonymous" alt="POI Chart" className="w-full h-full object-cover" />
                                     </div>
                                 )}
 
@@ -471,7 +479,7 @@ Generated via PipTab Analytics Platform`;
 
                             <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
                                 <span>Entry Invalidation: <strong>Optimal Execution</strong></span>
-                                <span>Phase 4 of 4</span>
+                                <span>Stage 4 of 4</span>
                             </div>
                         </div>
                     </div>
@@ -494,7 +502,8 @@ Generated via PipTab Analytics Platform`;
                         </div>
                     </div>
                 </div>
-            </motion.div>
-        </div>
-    );
+            </div>
+        </motion.div>
+    </div>
+);
 }
