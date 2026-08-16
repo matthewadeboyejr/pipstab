@@ -61,9 +61,9 @@ export default async function MacroPage() {
     return (
         <div className="w-full">
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-foreground font-['Montserrat']">Live Macro Environment</h1>
+                <h1 className="text-2xl font-bold text-foreground font-['Montserrat']">Global Macro Intelligence</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Real-time economic calendar, news scraping, and algorithmic sentiment scoring.
+                    G8 currency strength matrix, 24-hour world session liquidity radar, and central bank rate differentials.
                 </p>
             </div>
             
