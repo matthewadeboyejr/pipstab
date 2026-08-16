@@ -59,13 +59,14 @@ export async function sendEarlyAccessInviteEmail({
       
       <div class="feature-box">
         <p style="margin-top:0; color:#FFFFFF; font-weight:700; font-size:13px;">What you can explore in this early release:</p>
-        <div class="feature-item">⚡ <strong>Live Broker Sync</strong>: 1-click connect your Deriv accounts for automated journal sync.</div>
-        <div class="feature-item">🧠 <strong>Performance Auditor</strong>: AI risk director with brutal feedback & discipline checkups.</div>
-        <div class="feature-item">📊 <strong>Macro Engine & News Pulse</strong>: Real-time central bank matrices and high-impact release countdowns.</div>
+        <div class="feature-item">📖 <strong>Trade Journaling & Analytics</strong>: Structured logging of setups, execution rules, emotions, and risk-to-reward ratios to find your true edge.</div>
+        <div class="feature-item">🌐 <strong>Global Macro Outlook & Calendar</strong>: Real-time central bank policy matrices, rate spreads, news sentiment, and economic release deviation playbooks.</div>
+        <div class="feature-item">🧠 <strong>AI Performance Auditor</strong>: Objective performance audits analyzing your trade history to expose discipline leaks and risk mismanagement.</div>
+        <div class="feature-item">🎯 <strong>Psychology & Mindset Check-in</strong>: Daily pre-session routines and rule tracking to eliminate tilt and protect your capital.</div>
       </div>
 
       <p style="font-size:12px; color:#F59E0B; background-color: rgba(245, 158, 11, 0.08); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
-        ⚠️ <strong>Note</strong>: This is an active early-access preview build. If you spot any bugs or have feature ideas, you can share feedback directly inside the app to help shape the future of PipTab.
+        ⚠️ <strong>Early Access Preview</strong>: PipTab is currently in active early beta development. If you experience any quirks or have feature requests, you can submit feedback directly in the app to help shape the platform.
       </p>
 
       <center>
