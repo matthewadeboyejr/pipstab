@@ -399,101 +399,7 @@ Generated via PipTab Analytics Platform`;
                             </div>
                         </div>
 
-                        {/* 2. AI Strategy Auditor & Confluence Engine (If Generated and Enabled) */}
-                        {aiAudit && includeAiInExport && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`p-6 rounded-2xl border page-break-inside-avoid ${
-                                    isLightMode
-                                        ? "bg-emerald-50/70 border-emerald-200 text-slate-800"
-                                        : "bg-gradient-to-r from-emerald-950/30 via-[#0B1520] to-[#0A121E] border-emerald-500/30 text-slate-200"
-                                }`}
-                            >
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-emerald-500/20">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black shadow-sm">
-                                            <Zap className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-extrabold font-['Montserrat'] tracking-wide text-foreground flex items-center gap-2">
-                                                <span>AI Institutional Strategy Audit</span>
-                                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono font-bold">
-                                                    GEMINI AI AUDITED
-                                                </span>
-                                            </h3>
-                                            <p className="text-[11px] text-muted-foreground">
-                                                Objective confluence assessment & structural risk verification
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Score Pill */}
-                                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 self-start sm:self-auto">
-                                        <span className="text-xs font-mono font-bold text-muted-foreground">Confluence:</span>
-                                        <span className="text-base font-black font-mono text-emerald-400">
-                                            {aiAudit.confluenceScore}/100
-                                        </span>
-                                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-                                            {aiAudit.confluenceRating}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                                    {/* Alignment Strengths */}
-                                    <div className="space-y-2">
-                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            <span>Timeframe Alignment</span>
-                                        </span>
-                                        <p className="text-xs leading-relaxed text-slate-300">
-                                            {aiAudit.timeframeAlignmentSummary}
-                                        </p>
-                                        <ul className="space-y-1 pt-1">
-                                            {aiAudit.alignmentStrengths.map((str, i) => (
-                                                <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                                                    <span className="text-emerald-400 mt-0.5">•</span>
-                                                    <span>{str}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    {/* Potential Blind Spots */}
-                                    <div className="space-y-2">
-                                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <AlertTriangle className="w-3.5 h-3.5" />
-                                            <span>Potential Blind Spots & Traps</span>
-                                        </span>
-                                        <ul className="space-y-1.5">
-                                            {aiAudit.blindSpots.map((spot, i) => (
-                                                <li key={i} className="text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-1.5">
-                                                    <span className="text-amber-400 mt-0.5">⚠️</span>
-                                                    <span>{spot}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    {/* Executive Directive */}
-                                    <div className="space-y-2">
-                                        <span className="text-[10px] font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
-                                            <ShieldAlert className="w-3.5 h-3.5" />
-                                            <span>Executive Action Directive</span>
-                                        </span>
-                                        <div className="p-3 rounded-xl bg-black/40 border border-border/40 text-xs text-foreground/90 font-medium leading-relaxed">
-                                            "{aiAudit.executiveDirective}"
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground font-mono">
-                                            Risk Invalidation: {aiAudit.riskInvalidationCheck}
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* 3. Multi-Timeframe 2x2 Framing Grid */}
+                        {/* 2. Multi-Timeframe 2x2 Framing Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* STAGE 1: Higher Timeframe (HTF) */}
                             <div
@@ -683,6 +589,100 @@ Generated via PipTab Analytics Platform`;
                                 </div>
                             </div>
                         </div>
+
+                        {/* 3. AI Strategy Auditor & Confluence Engine (Rendered at bottom after 4-stage breakdown) */}
+                        {aiAudit && includeAiInExport && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`p-6 rounded-2xl border page-break-inside-avoid shadow-lg ${
+                                    isLightMode
+                                        ? "bg-emerald-50/70 border-emerald-300 text-slate-800"
+                                        : "bg-gradient-to-r from-emerald-950/30 via-[#0B1520] to-[#0A121E] border-emerald-500/30 text-slate-200"
+                                }`}
+                            >
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-emerald-500/20">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black shadow-sm">
+                                            <Zap className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-extrabold font-['Montserrat'] tracking-wide text-foreground flex items-center gap-2">
+                                                <span>AI Institutional Strategy Audit & Confluence Verdict</span>
+                                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono font-bold">
+                                                    GEMINI AI AUDITED
+                                                </span>
+                                            </h3>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Objective top-down thesis audit, structural risk checks & execution directive
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Score Pill */}
+                                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 self-start sm:self-auto">
+                                        <span className="text-xs font-mono font-bold text-muted-foreground">Confluence:</span>
+                                        <span className="text-base font-black font-mono text-emerald-400">
+                                            {aiAudit.confluenceScore}/100
+                                        </span>
+                                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                                            {aiAudit.confluenceRating}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
+                                    {/* Alignment Strengths */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            <span>Timeframe Alignment</span>
+                                        </span>
+                                        <p className="text-xs leading-relaxed text-slate-300">
+                                            {aiAudit.timeframeAlignmentSummary}
+                                        </p>
+                                        <ul className="space-y-1 pt-1">
+                                            {aiAudit.alignmentStrengths.map((str, i) => (
+                                                <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                                    <span className="text-emerald-400 mt-0.5">•</span>
+                                                    <span>{str}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Potential Blind Spots */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                            <span>Potential Blind Spots & Traps</span>
+                                        </span>
+                                        <ul className="space-y-1.5">
+                                            {aiAudit.blindSpots.map((spot, i) => (
+                                                <li key={i} className="text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-1.5">
+                                                    <span className="text-amber-400 mt-0.5">⚠️</span>
+                                                    <span>{spot}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Executive Directive */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                                            <ShieldAlert className="w-3.5 h-3.5" />
+                                            <span>Executive Action Directive</span>
+                                        </span>
+                                        <div className="p-3 rounded-xl bg-black/40 border border-border/40 text-xs text-foreground/90 font-medium leading-relaxed">
+                                            "{aiAudit.executiveDirective}"
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground font-mono">
+                                            Risk Invalidation: {aiAudit.riskInvalidationCheck}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* 4. Executive Dossier Verification Footer */}
                         <div
