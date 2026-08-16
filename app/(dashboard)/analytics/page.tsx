@@ -34,6 +34,7 @@ export default async function AnalyticsPage() {
         date: t.date || new Date().toISOString(),
         emotion: t.emotion || "Neutral",
         checklist_results: t.checklist_results || {},
+        account_id: t.account_id || null,
     }));
 
     return (

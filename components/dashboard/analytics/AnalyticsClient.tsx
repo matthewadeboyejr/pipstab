@@ -11,6 +11,8 @@ import {
     BarChart3,
     DollarSign,
 } from "lucide-react";
+import { useAccounts } from "@/context/AccountContext";
+import { Layers } from "lucide-react";
 import { useMemo } from "react";
 
 interface AnalyticsClientProps {
@@ -24,14 +26,21 @@ const severityColors: Record<string, string> = {
 };
 
 export default function AnalyticsClient({ trades }: AnalyticsClientProps) {
-    
+    const { activeAccount } = useAccounts();
+
+    // Filter trades by active account
+    const filteredTrades = useMemo(() => {
+        if (!activeAccount) return trades;
+        return trades.filter((t) => t.account_id === activeAccount.id);
+    }, [trades, activeAccount]);
+
     // --- Data Aggregation Engine ---
     const stats = useMemo(() => {
-        if (!trades || trades.length === 0) return null;
+        if (!filteredTrades || filteredTrades.length === 0) return null;
 
-        const totalTrades = trades.length;
-        const winningTrades = trades.filter(t => t.raw_pnl > 0);
-        const losingTrades = trades.filter(t => t.raw_pnl < 0);
+        const totalTrades = filteredTrades.length;
+        const winningTrades = filteredTrades.filter(t => t.raw_pnl > 0);
+        const losingTrades = filteredTrades.filter(t => t.raw_pnl < 0);
         
         const winRate = totalTrades > 0 ? ((winningTrades.length / totalTrades) * 100).toFixed(1) : "0.0";
         
@@ -42,7 +51,7 @@ export default function AnalyticsClient({ trades }: AnalyticsClientProps) {
 
         // Performance by Setup
         const setupStats: Record<string, { wins: number, total: number, pnl: number }> = {};
-        trades.forEach(t => {
+        filteredTrades.forEach(t => {
             const setupName = t.setup || "None";
             if (!setupStats[setupName]) setupStats[setupName] = { wins: 0, total: 0, pnl: 0 };
             setupStats[setupName].total += 1;
@@ -61,7 +70,7 @@ export default function AnalyticsClient({ trades }: AnalyticsClientProps) {
         let totalLeakageAmount = 0;
         const ruleViolations: any[] = [];
         
-        trades.forEach(t => {
+        filteredTrades.forEach(t => {
             if (!t.checklist_results) return;
             const brokenRules = Object.entries(t.checklist_results).filter(([_, passed]) => !passed);
             
@@ -116,7 +125,7 @@ export default function AnalyticsClient({ trades }: AnalyticsClientProps) {
             totalLeakageAmount,
             leakageSources
         };
-    }, [trades]);
+    }, [filteredTrades]);
 
     if (!stats) {
         return (
@@ -134,6 +143,20 @@ export default function AnalyticsClient({ trades }: AnalyticsClientProps) {
             animate={{ opacity: 1 }}
             className="space-y-6 max-w-[1400px] mx-auto"
         >
+            {/* Active Account Filter Banner */}
+            {activeAccount && (
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-accent/10 border border-accent/20 text-xs text-accent font-semibold">
+                    <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4" />
+                        <span>
+                            Analytics filtered for: <strong>{activeAccount.name}</strong> ({activeAccount.broker.toUpperCase()})
+                        </span>
+                    </div>
+                    <span className="font-mono text-[11px]">
+                        {filteredTrades.length} Trades Analyzed
+                    </span>
+                </div>
+            )}
             {/* KPI Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card border border-border/50 rounded-2xl p-4 flex flex-col">

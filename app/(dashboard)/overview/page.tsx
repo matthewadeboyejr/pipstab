@@ -105,6 +105,7 @@ export default async function OverviewPage() {
         rr: t.rr || "-",
         setup: t.setup || "None",
         date: t.date ? new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "N/A",
+        rawDate: t.date || null,
         emotion: t.emotion || "Neutral",
         account_id: t.account_id || null
     }));
