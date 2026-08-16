@@ -17,6 +17,14 @@ import {
     Globe,
     Shield,
     Loader2,
+    ChevronRight,
+    TrendingUp,
+    TrendingDown,
+    Activity,
+    FileText,
+    Eye,
+    Sun,
+    Moon,
 } from "lucide-react";
 import { OutlookItem } from "./CreateOutlookModal";
 import { toPng } from "html-to-image";
@@ -34,11 +42,12 @@ export default function OutlookDossierModal({
     open,
     onClose,
     outlook,
-    userName = "Trader",
+    userName = "Matthew Adeboye",
 }: OutlookDossierModalProps) {
     const { addToast } = useToast();
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [isLightMode, setIsLightMode] = useState(false);
     const dossierRef = useRef<HTMLDivElement>(null);
 
     if (!open || !outlook) return null;
@@ -63,6 +72,8 @@ export default function OutlookDossierModal({
         ? format(new Date(outlook.created_at), "MMMM d, yyyy")
         : "Recent";
 
+    const docId = `DOC-${outlook.pair.replace("/", "")}-${outlook.id.slice(0, 6).toUpperCase()}`;
+
     const handlePrintPdf = () => {
         window.print();
     };
@@ -73,17 +84,17 @@ export default function OutlookDossierModal({
 
         try {
             const dataUrl = await toPng(dossierRef.current, {
-                quality: 0.98,
+                quality: 1,
                 pixelRatio: 2,
                 cacheBust: true,
             });
 
             const link = document.createElement("a");
-            link.download = `PipTab-Outlook-${outlook.pair.replace("/", "")}-${Date.now()}.png`;
+            link.download = `PipTab-Dossier-${outlook.pair.replace("/", "")}-${Date.now()}.png`;
             link.href = dataUrl;
             link.click();
 
-            addToast("Outlook dossier downloaded as high-res PNG", "success");
+            addToast("High-resolution strategy dossier downloaded", "success");
         } catch (err: any) {
             console.error("Export image failed:", err);
             addToast("Failed to generate image. Please use PDF Print.", "error");
@@ -93,56 +104,85 @@ export default function OutlookDossierModal({
     };
 
     const handleCopySummary = () => {
-        const text = `📊 PipTab Top-Down Outlook: ${outlook.title}
-Pair: ${outlook.pair} | Direction: ${outlook.direction}
+        const text = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 PIPTAB INSTITUTIONAL STRATEGY DOSSIER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Title: ${outlook.title}
+Asset: ${outlook.pair} | Bias: ${outlook.direction}
 Date: ${formattedDate}
+Analyst: ${userName}
+Doc ID: ${docId}
 
-[HTF]: ${outlook.htf_narrative || "N/A"}
-[ITF]: ${outlook.itf_narrative || "N/A"}
-[LTF]: ${outlook.ltf_narrative || "N/A"}
-[POI]: ${outlook.poi_narrative || "N/A"}
+1. HIGHER TIMEFRAME (HTF - Weekly/Monthly):
+${outlook.htf_narrative || "No narrative."}
 
-Generated via PipTab Analytics`;
+2. INTERMEDIATE TIMEFRAME (ITF - Daily):
+${outlook.itf_narrative || "No narrative."}
+
+3. LOWER TIMEFRAME (LTF - 4H/1H):
+${outlook.ltf_narrative || "No narrative."}
+
+4. POINT OF INTEREST (POI & Entry Trigger):
+${outlook.poi_narrative || "No narrative."}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated via PipTab Analytics Platform`;
 
         navigator.clipboard.writeText(text);
         setCopied(true);
-        addToast("Outlook narrative copied to clipboard", "success");
+        addToast("Institutional strategy memo copied to clipboard", "success");
         setTimeout(() => setCopied(false), 2000);
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/90 backdrop-blur-lg animate-in fade-in duration-200">
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                initial={{ opacity: 0, scale: 0.96, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                className="w-full max-w-4xl bg-card border border-border/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+                exit={{ opacity: 0, scale: 0.96, y: 15 }}
+                className="w-full max-w-5xl bg-[#090D16] border border-border/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh]"
             >
-                {/* Header Action Bar */}
-                <div className="flex items-center justify-between p-4 px-6 border-b border-border/40 bg-gradient-to-r from-accent/10 via-card to-card print:hidden">
-                    <div className="flex items-center gap-2">
-                        <Compass className="w-5 h-5 text-accent" />
-                        <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
-                            Institutional Outlook Dossier
-                        </h3>
+                {/* Executive Control Header (Hidden when printing) */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-4 px-6 border-b border-border/40 bg-[#0E1424] print:hidden">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center text-accent">
+                            <FileText className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-extrabold text-foreground font-['Montserrat']">
+                                Institutional Market Strategy Dossier
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground font-mono">
+                                Reference: {docId} • Ready for PDF & PNG Export
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {/* Light / Dark Mode Toggle for Dossier */}
+                        <button
+                            onClick={() => setIsLightMode(!isLightMode)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all"
+                            title="Toggle Dossier Theme"
+                        >
+                            {isLightMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                            <span className="hidden sm:inline">{isLightMode ? "Dark Theme" : "Editorial White"}</span>
+                        </button>
+
                         <button
                             onClick={handleCopySummary}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/30 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all"
                         >
                             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                            <span>{copied ? "Copied!" : "Copy Text"}</span>
+                            <span>{copied ? "Copied" : "Copy Memo"}</span>
                         </button>
 
                         <button
                             onClick={handleDownloadPng}
                             disabled={isGeneratingImage}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/30 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all"
                         >
                             {isGeneratingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                            <span>Save Image</span>
+                            <span>Download PNG</span>
                         </button>
 
                         <button
@@ -150,183 +190,308 @@ Generated via PipTab Analytics`;
                             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-extrabold hover:opacity-90 transition-all shadow-md shadow-accent/20"
                         >
                             <Printer className="w-3.5 h-3.5" />
-                            <span>Save as PDF / Print</span>
+                            <span>Save PDF / Print</span>
                         </button>
 
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors ml-2"
+                            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors ml-1"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* Printable Dossier Container */}
-                <div className="p-6 md:p-8 overflow-y-auto space-y-8 custom-scrollbar bg-[#0B0F19] text-slate-100" ref={dossierRef}>
-                    {/* Dossier Header */}
-                    <div className="p-6 rounded-2xl bg-[#111726] border border-slate-800 shadow-md space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                {/* Printable Document Container */}
+                <div
+                    ref={dossierRef}
+                    className={`p-6 sm:p-10 overflow-y-auto space-y-8 custom-scrollbar transition-colors duration-200 ${
+                        isLightMode
+                            ? "bg-[#F8FAFC] text-[#0F172A]"
+                            : "bg-[#070A11] text-[#E2E8F0]"
+                    }`}
+                >
+                    {/* 1. Executive Top Dossier Banner */}
+                    <div
+                        className={`p-6 rounded-2xl border transition-all ${
+                            isLightMode
+                                ? "bg-white border-slate-200 shadow-sm"
+                                : "bg-gradient-to-b from-[#111827] to-[#0D1320] border-border/60 shadow-xl"
+                        }`}
+                    >
+                        {/* Top Line: Brand & Metadata */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-border/30">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-slate-950 font-bold shadow-md shadow-accent/20">
                                     <Compass className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h1 className="text-xl font-extrabold text-white font-['Montserrat']">
-                                            PipTab Top-Down Market Dossier
-                                        </h1>
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/40 font-mono font-bold">
-                                            INSTITUTIONAL
+                                        <span className="text-xs font-extrabold tracking-wider uppercase text-accent font-['Montserrat']">
+                                            PipTab Analytics
+                                        </span>
+                                        <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold bg-accent/15 text-accent border border-accent/30 uppercase">
+                                            Institutional Briefing
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-400">
-                                        Multi-Timeframe Market Structure & Execution Framing
-                                    </p>
+                                    <h1 className="text-xl font-extrabold font-['Montserrat'] tracking-tight">
+                                        Top-Down Market Strategy Dossier
+                                    </h1>
                                 </div>
                             </div>
 
-                            <div className="text-left sm:text-right text-xs text-slate-400 font-mono">
-                                <p>Date: <strong className="text-slate-200">{formattedDate}</strong></p>
-                                <p>Trader: <strong className="text-accent">{userName}</strong></p>
+                            <div className="text-left sm:text-right font-mono text-xs text-muted-foreground space-y-0.5">
+                                <p>Reference: <strong className="text-foreground">{docId}</strong></p>
+                                <p>Date: <strong className="text-foreground">{formattedDate}</strong></p>
+                                <p>Lead Analyst: <strong className="text-accent">{userName}</strong></p>
                             </div>
                         </div>
 
-                        {/* Title, Pair, and Direction */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                        {/* Title, Pair, and Direction Callout Strip */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-5">
                             <div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                                    Outlook Plan
+                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-0.5">
+                                    Market Analysis & Execution Directive
                                 </span>
-                                <h2 className="text-lg font-bold text-white font-['Montserrat']">
+                                <h2 className="text-2xl font-black font-['Montserrat'] tracking-tight">
                                     {outlook.title}
                                 </h2>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono font-extrabold text-white">
+                            <div className="flex items-center gap-3 shrink-0">
+                                <div className="px-4 py-2 rounded-xl bg-white/5 border border-border/40 text-base font-mono font-black tracking-wider">
                                     {outlook.pair}
                                 </div>
 
-                                <span
-                                    className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-xl border ${
+                                <div
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border shadow-sm ${
                                         outlook.direction === "LONG"
-                                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10"
                                             : outlook.direction === "SHORT"
-                                            ? "bg-red-500/20 text-red-400 border-red-500/40"
-                                            : "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                                            ? "bg-red-500/15 text-red-400 border-red-500/30 shadow-red-500/10"
+                                            : "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10"
                                     }`}
                                 >
-                                    {outlook.direction === "LONG" ? "▲ LONG BIAS" : outlook.direction === "SHORT" ? "▼ SHORT BIAS" : "◆ NEUTRAL BIAS"}
-                                </span>
+                                    {outlook.direction === "LONG" ? (
+                                        <TrendingUp className="w-4 h-4" />
+                                    ) : outlook.direction === "SHORT" ? (
+                                        <TrendingDown className="w-4 h-4" />
+                                    ) : (
+                                        <Activity className="w-4 h-4" />
+                                    )}
+                                    <span>{outlook.direction} DISPLACEMENT</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 1: Higher Timeframe (HTF) */}
-                    <div className="p-6 rounded-2xl bg-[#111726] border border-slate-800 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <div className="flex items-center gap-2">
-                                <Layers className="w-4 h-4 text-accent" />
-                                <h3 className="text-sm font-bold text-white font-['Montserrat']">
-                                    1. Higher Timeframe (HTF) — Weekly/Monthly
-                                </h3>
+                    {/* 2. Multi-Timeframe 2x2 Framing Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* STAGE 1: Higher Timeframe (HTF) */}
+                        <div
+                            className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 page-break-inside-avoid ${
+                                isLightMode
+                                    ? "bg-white border-slate-200 shadow-sm"
+                                    : "bg-[#0E1422] border-border/50"
+                            }`}
+                        >
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between pb-3 border-b border-border/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-lg bg-accent/15 flex items-center justify-center text-accent">
+                                            <Layers className="w-3.5 h-3.5" />
+                                        </div>
+                                        <h3 className="text-xs font-extrabold font-['Montserrat'] tracking-wide uppercase">
+                                            1. Higher Timeframe (HTF)
+                                        </h3>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 uppercase">
+                                        Weekly / Monthly
+                                    </span>
+                                </div>
+
+                                {htfImgs.length > 0 && (
+                                    <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
+                                        <img src={htfImgs[0]} alt="HTF Chart" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        Macro Liquidity & DOL Analysis:
+                                    </span>
+                                    <div className={`p-4 rounded-xl text-xs leading-relaxed whitespace-pre-line font-sans ${
+                                        isLightMode ? "bg-slate-50 border border-slate-200 text-slate-700" : "bg-black/30 border border-border/30 text-slate-300"
+                                    }`}>
+                                        {outlook.htf_narrative || "No higher timeframe narrative recorded."}
+                                    </div>
+                                </div>
                             </div>
-                            <span className="text-[10px] text-slate-400 uppercase font-mono">
-                                Draw on Liquidity & Key Levels
-                            </span>
+
+                            <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
+                                <span>Core Driver: <strong>Draw on Liquidity (DOL)</strong></span>
+                                <span>Phase 1 of 4</span>
+                            </div>
                         </div>
 
-                        {htfImgs.length > 0 && (
-                            <div className="rounded-xl overflow-hidden border border-slate-800 bg-black/40">
-                                <img src={htfImgs[0]} alt="HTF Chart" className="w-full object-contain max-h-[380px]" />
-                            </div>
-                        )}
+                        {/* STAGE 2: Intermediate Timeframe (ITF) */}
+                        <div
+                            className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 page-break-inside-avoid ${
+                                isLightMode
+                                    ? "bg-white border-slate-200 shadow-sm"
+                                    : "bg-[#0E1422] border-border/50"
+                            }`}
+                        >
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between pb-3 border-b border-border/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-400">
+                                            <Compass className="w-3.5 h-3.5" />
+                                        </div>
+                                        <h3 className="text-xs font-extrabold font-['Montserrat'] tracking-wide uppercase">
+                                            2. Intermediate Timeframe (ITF)
+                                        </h3>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                                        Daily (D1)
+                                    </span>
+                                </div>
 
-                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
-                            {outlook.htf_narrative || "No narrative recorded."}
+                                {itfImgs.length > 0 && (
+                                    <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
+                                        <img src={itfImgs[0]} alt="ITF Chart" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        Market Structure Shift & CISD:
+                                    </span>
+                                    <div className={`p-4 rounded-xl text-xs leading-relaxed whitespace-pre-line font-sans ${
+                                        isLightMode ? "bg-slate-50 border border-slate-200 text-slate-700" : "bg-black/30 border border-border/30 text-slate-300"
+                                    }`}>
+                                        {outlook.itf_narrative || "No intermediate timeframe narrative recorded."}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
+                                <span>Institutional Shift: <strong>CISD Alignment</strong></span>
+                                <span>Phase 2 of 4</span>
+                            </div>
+                        </div>
+
+                        {/* STAGE 3: Lower Timeframe (LTF) */}
+                        <div
+                            className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 page-break-inside-avoid ${
+                                isLightMode
+                                    ? "bg-white border-slate-200 shadow-sm"
+                                    : "bg-[#0E1422] border-border/50"
+                            }`}
+                        >
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between pb-3 border-b border-border/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-400">
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                        </div>
+                                        <h3 className="text-xs font-extrabold font-['Montserrat'] tracking-wide uppercase">
+                                            3. Lower Timeframe (LTF)
+                                        </h3>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
+                                        4-Hour / 1-Hour
+                                    </span>
+                                </div>
+
+                                {ltfImgs.length > 0 && (
+                                    <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
+                                        <img src={ltfImgs[0]} alt="LTF Chart" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        Displacement Legs & Pullback Range:
+                                    </span>
+                                    <div className={`p-4 rounded-xl text-xs leading-relaxed whitespace-pre-line font-sans ${
+                                        isLightMode ? "bg-slate-50 border border-slate-200 text-slate-700" : "bg-black/30 border border-border/30 text-slate-300"
+                                    }`}>
+                                        {outlook.ltf_narrative || "No lower timeframe narrative recorded."}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
+                                <span>Execution Range: <strong>Displacement Vector</strong></span>
+                                <span>Phase 3 of 4</span>
+                            </div>
+                        </div>
+
+                        {/* STAGE 4: Point of Interest (POI) */}
+                        <div
+                            className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 page-break-inside-avoid ${
+                                isLightMode
+                                    ? "bg-white border-slate-200 shadow-sm"
+                                    : "bg-[#0E1422] border-border/50"
+                            }`}
+                        >
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between pb-3 border-b border-border/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400">
+                                            <Target className="w-3.5 h-3.5" />
+                                        </div>
+                                        <h3 className="text-xs font-extrabold font-['Montserrat'] tracking-wide uppercase">
+                                            4. Point of Interest (POI)
+                                        </h3>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                                        Execution Trigger
+                                    </span>
+                                </div>
+
+                                {poiImgs.length > 0 && (
+                                    <div className="rounded-xl overflow-hidden border border-border/40 bg-black/40 aspect-video">
+                                        <img src={poiImgs[0]} alt="POI Chart" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        Order Block, FVG & Invalidation Parameters:
+                                    </span>
+                                    <div className={`p-4 rounded-xl text-xs leading-relaxed whitespace-pre-line font-sans ${
+                                        isLightMode ? "bg-slate-50 border border-slate-200 text-slate-700" : "bg-black/30 border border-border/30 text-slate-300"
+                                    }`}>
+                                        {outlook.poi_narrative || "No POI execution narrative recorded."}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
+                                <span>Entry Invalidation: <strong>Optimal Execution</strong></span>
+                                <span>Phase 4 of 4</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Section 2: Intermediate Timeframe (ITF) */}
-                    <div className="p-6 rounded-2xl bg-[#111726] border border-slate-800 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <div className="flex items-center gap-2">
-                                <Compass className="w-4 h-4 text-blue-400" />
-                                <h3 className="text-sm font-bold text-white font-['Montserrat']">
-                                    2. Intermediate Timeframe (ITF) — Daily
-                                </h3>
-                            </div>
-                            <span className="text-[10px] text-slate-400 uppercase font-mono">
-                                Market Structure Shift & CISD
-                            </span>
+                    {/* 3. Executive Dossier Verification Footer */}
+                    <div
+                        className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono ${
+                            isLightMode
+                                ? "bg-white border-slate-200 text-slate-500"
+                                : "bg-[#0E1422] border-border/40 text-muted-foreground"
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-accent" />
+                            <span>PipTab Institutional Intelligence • Top-Down Market Architecture</span>
                         </div>
-
-                        {itfImgs.length > 0 && (
-                            <div className="rounded-xl overflow-hidden border border-slate-800 bg-black/40">
-                                <img src={itfImgs[0]} alt="ITF Chart" className="w-full object-contain max-h-[380px]" />
-                            </div>
-                        )}
-
-                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
-                            {outlook.itf_narrative || "No narrative recorded."}
+                        <div className="flex items-center gap-3">
+                            <span>Status: <strong className="text-emerald-400">VERIFIED FRAMEWORK</strong></span>
+                            <span>{formattedDate}</span>
                         </div>
-                    </div>
-
-                    {/* Section 3: Lower Timeframe (LTF) */}
-                    <div className="p-6 rounded-2xl bg-[#111726] border border-slate-800 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-amber-400" />
-                                <h3 className="text-sm font-bold text-white font-['Montserrat']">
-                                    3. Lower Timeframe (LTF) — 4H/1H
-                                </h3>
-                            </div>
-                            <span className="text-[10px] text-slate-400 uppercase font-mono">
-                                Displacement & Pullback Range
-                            </span>
-                        </div>
-
-                        {ltfImgs.length > 0 && (
-                            <div className="rounded-xl overflow-hidden border border-slate-800 bg-black/40">
-                                <img src={ltfImgs[0]} alt="LTF Chart" className="w-full object-contain max-h-[380px]" />
-                            </div>
-                        )}
-
-                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
-                            {outlook.ltf_narrative || "No narrative recorded."}
-                        </div>
-                    </div>
-
-                    {/* Section 4: Point of Interest (POI) */}
-                    <div className="p-6 rounded-2xl bg-[#111726] border border-slate-800 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <div className="flex items-center gap-2">
-                                <Target className="w-4 h-4 text-emerald-400" />
-                                <h3 className="text-sm font-bold text-white font-['Montserrat']">
-                                    4. Point of Interest (POI) — Execution & Invalidation
-                                </h3>
-                            </div>
-                            <span className="text-[10px] text-slate-400 uppercase font-mono">
-                                Order Block & Entry Trigger
-                            </span>
-                        </div>
-
-                        {poiImgs.length > 0 && (
-                            <div className="rounded-xl overflow-hidden border border-slate-800 bg-black/40">
-                                <img src={poiImgs[0]} alt="POI Chart" className="w-full object-contain max-h-[380px]" />
-                            </div>
-                        )}
-
-                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
-                            {outlook.poi_narrative || "No narrative recorded."}
-                        </div>
-                    </div>
-
-                    {/* Dossier Footer Watermark */}
-                    <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-center text-[11px] text-slate-400 flex items-center justify-between font-mono">
-                        <span>PipTab Analytics • Professional Trade Journal & Execution Engine</span>
-                        <span>Generated on {formattedDate}</span>
                     </div>
                 </div>
             </motion.div>
