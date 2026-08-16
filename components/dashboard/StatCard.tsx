@@ -14,15 +14,15 @@ interface StatCardProps {
 
 export default function StatCard({ label, value, change, trend = "neutral", icon, sparklineData }: StatCardProps) {
     const trendColors = {
-        up: "text-emerald-400",
-        down: "text-red-400",
+        up: "text-emerald-600 dark:text-emerald-400",
+        down: "text-red-600 dark:text-red-400",
         neutral: "text-muted-foreground",
     };
 
     const trendBgColors = {
-        up: "bg-emerald-400/10",
-        down: "bg-red-400/10",
-        neutral: "bg-white/5",
+        up: "bg-emerald-500/10 dark:bg-emerald-400/10",
+        down: "bg-red-500/10 dark:bg-red-400/10",
+        neutral: "bg-muted dark:bg-white/5",
     };
 
     const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;

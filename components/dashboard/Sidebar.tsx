@@ -199,7 +199,7 @@ export default function Sidebar() {
                                             href={item.href}
                                             className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                                                 ? "bg-accent/10 text-accent"
-                                                : "text-muted-foreground hover:text-sidebar-foreground hover:bg-white/5"
+                                                : "text-muted-foreground hover:text-sidebar-foreground hover:bg-muted/70 dark:hover:bg-white/5"
                                                 }`}
                                         >
                                             {isActive && (

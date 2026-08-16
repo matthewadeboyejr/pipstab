@@ -285,17 +285,17 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
                                 {/* Card Top Bar */}
                                 <div className="p-5 border-b border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01]">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-sm font-extrabold font-mono px-3 py-1 rounded-xl bg-white/5 border border-border/40 text-foreground">
+                                        <span className="text-sm font-extrabold font-mono px-3 py-1 rounded-xl bg-muted dark:bg-white/5 border border-border/50 text-foreground">
                                             {outlook.pair}
                                         </span>
 
                                         <span
                                             className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
                                                 outlook.direction === "LONG"
-                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                                                     : outlook.direction === "SHORT"
-                                                    ? "bg-red-500/10 text-red-400 border-red-500/30"
-                                                    : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                                    ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"
+                                                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                                             }`}
                                         >
                                             {outlook.direction === "LONG" ? "▲ LONG" : outlook.direction === "SHORT" ? "▼ SHORT" : "◆ NEUTRAL"}
@@ -440,7 +440,7 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
                                                 </span>
                                             </div>
 
-                                            <div className="p-4 rounded-xl bg-white/[0.02] border border-border/30 text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-sans">
+                                            <div className="p-4 rounded-xl bg-muted/40 dark:bg-white/[0.02] border border-border/50 text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-sans">
                                                 {stageNarrative || (
                                                     <span className="text-muted-foreground italic text-xs">
                                                         No written narrative recorded for this timeframe stage.
