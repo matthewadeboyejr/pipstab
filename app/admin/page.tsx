@@ -284,6 +284,20 @@ export default function AdminOverviewPage() {
 
                     <div className="pt-4 border-t border-border/20 space-y-2">
                         <Link
+                            href="/admin/broadcast"
+                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-foreground transition-all"
+                        >
+                            <span>Publish Broadcast / Email</span>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-accent" />
+                        </Link>
+                        <Link
+                            href="/admin/analytics"
+                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-foreground transition-all"
+                        >
+                            <span>Platform Trading Analytics</span>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-accent" />
+                        </Link>
+                        <Link
                             href="/admin/users"
                             className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-foreground transition-all"
                         >

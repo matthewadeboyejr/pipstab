@@ -132,3 +132,140 @@ export async function sendEarlyAccessInviteEmail({
         };
     }
 }
+
+export interface BroadcastEmailParams {
+    recipients: Array<{ email: string; name?: string }>;
+    subject: string;
+    headline: string;
+    messageBody: string;
+    actionUrl?: string;
+    actionLabel?: string;
+}
+
+export async function sendCustomBroadcastEmail({
+    recipients,
+    subject,
+    headline,
+    messageBody,
+    actionUrl = "https://piptab.com",
+    actionLabel = "Open PipTab Platform",
+}: BroadcastEmailParams): Promise<{ success: boolean; sentCount: number; errors: string[] }> {
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
+    const senderName = process.env.BREVO_SENDER_NAME || "PipTab Announcements";
+
+    if (!apiKey) {
+        return {
+            success: false,
+            sentCount: 0,
+            errors: ["BREVO_API_KEY is not configured in .env.local"],
+        };
+    }
+
+    let sentCount = 0;
+    const errors: string[] = [];
+
+    // Format HTML email
+    const generateHtml = (name: string) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070A0F; color: #E5E7EB; margin: 0; padding: 0; }
+    .container { max-width: 580px; margin: 0 auto; padding: 40px 20px; }
+    .card { background-color: #0E131F; border: 1px solid #1E293B; border-radius: 16px; padding: 36px 30px; }
+    .badge { display: inline-block; background-color: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 20px; }
+    h1 { color: #FFFFFF; font-size: 22px; font-weight: 800; margin-top: 0; line-height: 1.3; }
+    p { color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 16px 0; }
+    .content-box { background-color: #141B2D; border: 1px solid #1E293B; border-radius: 12px; padding: 20px; margin: 20px 0; font-size: 14px; color: #E2E8F0; line-height: 1.6; white-space: pre-line; }
+    .btn { display: inline-block; background-color: #10B981; color: #070A0F; font-weight: 800; font-size: 14px; text-decoration: none; padding: 14px 28px; border-radius: 12px; margin: 20px 0; text-align: center; }
+    .footer { color: #64748B; font-size: 11px; text-align: center; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">📢 PipTab Platform Update</span>
+      <h1>${headline}</h1>
+      <p>Hello ${name || "Trader"},</p>
+      
+      <div class="content-box">
+        ${messageBody}
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${actionUrl}" class="btn">${actionLabel} &rarr;</a>
+      </div>
+
+      <div class="footer">
+        <p>Sent by PipTab Institutional Trading Analytics</p>
+        <p>© ${new Date().getFullYear()} PipTab. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    // Process in batches
+    for (const recipient of recipients) {
+        try {
+            const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: {
+                    "api-key": apiKey,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify({
+                    sender: { name: senderName, email: senderEmail },
+                    to: [{ email: recipient.email, name: recipient.name || "Trader" }],
+                    subject: subject,
+                    htmlContent: generateHtml(recipient.name || "Trader"),
+                }),
+            });
+
+            if (res.ok) {
+                sentCount++;
+            } else {
+                const err = await res.json();
+                errors.push(`${recipient.email}: ${err.message || res.statusText}`);
+            }
+        } catch (err: any) {
+            errors.push(`${recipient.email}: ${err.message}`);
+        }
+    }
+
+    return {
+        success: sentCount > 0,
+        sentCount,
+        errors,
+    };
+}
+
+export async function getBrevoAccountInfo(): Promise<{ plan?: string; creditsRemaining?: number; creditsTotal?: number; error?: string }> {
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) return { error: "BREVO_API_KEY not configured" };
+
+    try {
+        const res = await fetch("https://api.brevo.com/v3/account", {
+            headers: {
+                "api-key": apiKey,
+                "Accept": "application/json",
+            },
+        });
+        if (!res.ok) return { error: `Brevo returned status ${res.status}` };
+        const data = await res.json();
+        const plan = data.plan?.[0];
+        return {
+            plan: plan?.type || "Free Tier",
+            creditsRemaining: plan?.credits || 300,
+            creditsTotal: 300,
+        };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}

@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import {
     LayoutDashboard,
     Users,
+    BarChart3,
+    Megaphone,
     Activity,
     Mail,
     Sliders,
@@ -17,6 +19,8 @@ import {
 const ADMIN_NAV = [
     { href: "/admin", label: "Command Center", icon: LayoutDashboard },
     { href: "/admin/users", label: "Trader Directory", icon: Users },
+    { href: "/admin/analytics", label: "Platform Analytics", icon: BarChart3 },
+    { href: "/admin/broadcast", label: "Broadcast & Email", icon: Megaphone },
     { href: "/admin/brokers", label: "Broker Telemetry", icon: Activity },
     { href: "/admin/waitlist", label: "Early Access", icon: Mail },
     { href: "/admin/system", label: "System Ops & Flags", icon: Sliders },
