@@ -306,7 +306,7 @@ Generated via PipTab Analytics Platform`;
                                         </h3>
                                     </div>
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 uppercase">
-                                        Weekly / Monthly
+                                        Macro Context
                                     </span>
                                 </div>
 
@@ -330,7 +330,7 @@ Generated via PipTab Analytics Platform`;
 
                             <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
                                 <span>Core Driver: <strong>Draw on Liquidity (DOL)</strong></span>
-                                <span>Phase 1 of 4</span>
+                                <span>Stage 1 of 4</span>
                             </div>
                         </div>
 
@@ -353,7 +353,7 @@ Generated via PipTab Analytics Platform`;
                                         </h3>
                                     </div>
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
-                                        Daily (D1)
+                                        Market Structure
                                     </span>
                                 </div>
 
@@ -377,7 +377,7 @@ Generated via PipTab Analytics Platform`;
 
                             <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
                                 <span>Institutional Shift: <strong>CISD Alignment</strong></span>
-                                <span>Phase 2 of 4</span>
+                                <span>Stage 2 of 4</span>
                             </div>
                         </div>
 
@@ -400,7 +400,7 @@ Generated via PipTab Analytics Platform`;
                                         </h3>
                                     </div>
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
-                                        4-Hour / 1-Hour
+                                        Execution Range
                                     </span>
                                 </div>
 
@@ -424,7 +424,7 @@ Generated via PipTab Analytics Platform`;
 
                             <div className="text-[10px] text-muted-foreground/70 font-mono pt-2 border-t border-border/10 flex items-center justify-between">
                                 <span>Execution Range: <strong>Displacement Vector</strong></span>
-                                <span>Phase 3 of 4</span>
+                                <span>Stage 3 of 4</span>
                             </div>
                         </div>
 
@@ -447,7 +447,7 @@ Generated via PipTab Analytics Platform`;
                                         </h3>
                                     </div>
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
-                                        Execution Trigger
+                                        Entry Trigger
                                     </span>
                                 </div>
 

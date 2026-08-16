@@ -36,10 +36,10 @@ interface OutlooksClientProps {
 }
 
 const STAGES = [
-    { id: "htf", label: "HTF (Weekly)", sub: "Draw on Liquidity & Sweeps" },
-    { id: "itf", label: "ITF (Daily)", sub: "CISD & Market Shift" },
-    { id: "ltf", label: "LTF (4H/1H)", sub: "Displacement & Pullback" },
-    { id: "poi", label: "POI (Entry)", sub: "Order Block & Invalidation" },
+    { id: "htf", label: "HTF Context", sub: "Macro Bias & Key Liquidity" },
+    { id: "itf", label: "ITF Structure", sub: "Market Structure Shift & CISD" },
+    { id: "ltf", label: "LTF Flow", sub: "Displacement & Pullback Range" },
+    { id: "poi", label: "POI Execution", sub: "Entry Zone, Order Block & Invalidation" },
 ] as const;
 
 export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps) {

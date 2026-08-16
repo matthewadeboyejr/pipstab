@@ -44,10 +44,10 @@ interface CreateOutlookModalProps {
 }
 
 const TIMEFRAME_STAGES = [
-    { id: "htf", label: "1. HTF Narrative", sub: "Weekly/Monthly DOL & Key Liquidity", icon: Layers },
-    { id: "itf", label: "2. ITF Structure", sub: "Daily CISD & Market Shift", icon: Compass },
-    { id: "ltf", label: "3. LTF Execution", sub: "4H/1H Displacement & Entry Zone", icon: Sparkles },
-    { id: "poi", label: "4. POI Trigger", sub: "Order Block, FVG & Invalidation", icon: Target },
+    { id: "htf", label: "1. HTF Narrative", sub: "Macro Bias & Key Liquidity", icon: Layers },
+    { id: "itf", label: "2. ITF Structure", sub: "Market Structure Shift & CISD", icon: Compass },
+    { id: "ltf", label: "3. LTF Execution", sub: "Displacement & Pullback Zone", icon: Sparkles },
+    { id: "poi", label: "4. POI Trigger", sub: "Entry Zone, Order Block & Invalidation", icon: Target },
 ] as const;
 
 type TimeframeId = typeof TIMEFRAME_STAGES[number]["id"];
