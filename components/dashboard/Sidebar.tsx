@@ -29,8 +29,7 @@ const navSections = [
             { href: "/journal", label: "Journal", icon: BookOpen },
             { href: "/setups", label: "Setups & Rules", icon: ListChecks },
             { href: "/analytics", label: "Analytics", icon: BarChart3 },
-            { href: "/macro", label: "Macro", icon: Globe2 },
-            { href: "/fundamentals", label: "AI Fundamentals", icon: Sparkles },
+            { href: "/macro", label: "Macro & Intel", icon: Globe2 },
         ],
     },
     {
