@@ -73,7 +73,6 @@ const MACRO_TABS = [
     { id: "calendar", label: "Economic Calendar", icon: Calendar, color: "text-amber-400" },
     { id: "central_banks", label: "Central Bank Matrix", icon: Landmark, color: "text-blue-400" },
     { id: "news", label: "Sentiment Pulse", icon: Globe, color: "text-purple-400" },
-    { id: "auditor", label: "Journal Auditor", icon: ShieldCheck, color: "text-emerald-400" },
 ];
 
 function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
@@ -598,18 +597,6 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                     transition={{ duration: 0.3 }}
                 >
                     <NewsPulse />
-                </motion.div>
-            )}
-
-            {/* TAB CONTENT: 5. AI Journal Auditor */}
-            {activeTab === "auditor" && (
-                <motion.div
-                    key="auditor"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <JournalAuditor />
                 </motion.div>
             )}
         </div>

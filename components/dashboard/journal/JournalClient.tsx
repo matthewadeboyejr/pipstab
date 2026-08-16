@@ -19,7 +19,11 @@ import {
     Loader2,
     CheckCircle2,
     XCircle,
+    BookOpen,
+    ShieldCheck,
+    Sparkles,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import BrokerImportModal from "@/components/dashboard/settings/BrokerImportModal";
@@ -28,6 +32,8 @@ import { useAccounts } from "@/context/AccountContext";
 import { toPng } from 'html-to-image';
 import TradeShareCard from "./TradeShareCard";
 import { useToast } from "@/context/ToastContext";
+import JournalAuditor from "@/components/dashboard/fundamentals/JournalAuditor";
+import { Suspense } from "react";
 
 interface Trade {
     id: string;
@@ -162,12 +168,16 @@ function ImageUploadZone({
 }
 
 
-// ─── Journal Client ───────────────────────────────────────────
-export default function JournalClient({ trades }: JournalClientProps) {
+// ─── Journal Client Content ───────────────────────────────────────────
+function JournalClientContent({ trades }: JournalClientProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { addToast } = useToast();
     const supabase = createClient();
     const { activeAccount } = useAccounts();
+
+    const paramTab = searchParams.get("tab") || searchParams.get("view");
+    const [activeView, setActiveView] = useState<"logs" | "auditor">(paramTab === "auditor" ? "auditor" : "logs");
 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -179,6 +189,18 @@ export default function JournalClient({ trades }: JournalClientProps) {
     const [importModalOpen, setImportModalOpen] = useState(false);
 
     const [userName, setUserName] = useState<string>("");
+
+    // Sync activeView with searchParams
+    useEffect(() => {
+        const tab = searchParams.get("tab") || searchParams.get("view");
+        if (tab === "auditor") setActiveView("auditor");
+        else if (tab === "logs") setActiveView("logs");
+    }, [searchParams]);
+
+    const handleViewChange = (view: "logs" | "auditor") => {
+        setActiveView(view);
+        router.push(`/journal?view=${view}`, { scroll: false });
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -300,26 +322,110 @@ export default function JournalClient({ trades }: JournalClientProps) {
             animate={{ opacity: 1 }}
             className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500"
         >
-            {/* Stats summary bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                    { label: "Total Trades", value: filteredTrades.length.toString() },
-                    { label: "Win Rate", value: `${winRate.toFixed(1)}%` },
-                    { label: "Total P&L", value: `${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(2)}`, color: totalPnl >= 0 ? "text-emerald-400" : "text-red-400" },
-                    { label: "Avg R:R", value: "1:2.2" },
-                ].map((stat, i) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="rounded-xl bg-card border border-border/50 px-4 py-3"
+            {/* View Mode Switcher Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-accent/10 via-card to-card border border-accent/20 shadow-md">
+                <div>
+                    <h1 className="text-xl font-extrabold text-foreground font-['Montserrat'] flex items-center gap-2">
+                        {activeView === "auditor" ? (
+                            <>
+                                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                                <span>AI Performance & Risk Auditor</span>
+                            </>
+                        ) : (
+                            <>
+                                <BookOpen className="w-5 h-5 text-accent" />
+                                <span>Institutional Trade Journal</span>
+                            </>
+                        )}
+                    </h1>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {activeView === "auditor"
+                            ? "Objective AI audit analyzing discipline leaks, emotional tilt, and risk of ruin"
+                            : "Structured execution logging, chart snapshots, and setup edge verification"}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-1 p-1 bg-black/40 border border-border/50 rounded-2xl">
+                    <button
+                        onClick={() => handleViewChange("logs")}
+                        className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                            activeView === "logs" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
                     >
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
-                        <p className={`text-lg font-bold font-['Montserrat'] ${stat.color || "text-foreground"}`}>{stat.value}</p>
-                    </motion.div>
-                ))}
+                        {activeView === "logs" && (
+                            <motion.div
+                                layoutId="active-journal-view"
+                                className="absolute inset-0 bg-white/10 border border-white/10 rounded-xl"
+                                transition={{ type: "spring", duration: 0.4 }}
+                            />
+                        )}
+                        <BookOpen className="w-3.5 h-3.5 text-accent" />
+                        <span className="relative z-10">Trade Logs</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleViewChange("auditor")}
+                        className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                            activeView === "auditor" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        {activeView === "auditor" && (
+                            <motion.div
+                                layoutId="active-journal-view"
+                                className="absolute inset-0 bg-white/10 border border-white/10 rounded-xl"
+                                transition={{ type: "spring", duration: 0.4 }}
+                            />
+                        )}
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="relative z-10">AI Auditor</span>
+                        <span className="relative z-10 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            AI
+                        </span>
+                    </button>
+                </div>
             </div>
+
+            {/* TAB 1: AI PERFORMANCE AUDITOR */}
+            {activeView === "auditor" && (
+                <motion.div
+                    key="auditor-tab"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <JournalAuditor />
+                </motion.div>
+            )}
+
+            {/* TAB 2: TRADE LOGS */}
+            {activeView === "logs" && (
+                <motion.div
+                    key="logs-tab"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                >
+                    {/* Stats summary bar */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                            { label: "Total Trades", value: filteredTrades.length.toString() },
+                            { label: "Win Rate", value: `${winRate.toFixed(1)}%` },
+                            { label: "Total P&L", value: `${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(2)}`, color: totalPnl >= 0 ? "text-emerald-400" : "text-red-400" },
+                            { label: "Avg R:R", value: "1:2.2" },
+                        ].map((stat, i) => (
+                            <motion.div
+                                key={stat.label}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="rounded-xl bg-card border border-border/50 px-4 py-3"
+                            >
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
+                                <p className={`text-lg font-bold font-['Montserrat'] ${stat.color || "text-foreground"}`}>{stat.value}</p>
+                            </motion.div>
+                        ))}
+                    </div>
 
             {/* Filter bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -556,6 +662,8 @@ export default function JournalClient({ trades }: JournalClientProps) {
                     </motion.div>
                 )}
             </AnimatePresence>
+        </motion.div>
+    )}
 
             <ConfirmModal
                 isOpen={!!tradeToDelete}
@@ -591,5 +699,18 @@ export default function JournalClient({ trades }: JournalClientProps) {
                 )}
             </div>
         </motion.div>
+    );
+}
+
+export default function JournalClient(props: JournalClientProps) {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center p-20 text-muted-foreground text-sm">
+                <Loader2 className="w-5 h-5 animate-spin mr-2 text-accent" />
+                Loading Journal...
+            </div>
+        }>
+            <JournalClientContent {...props} />
+        </Suspense>
     );
 }
