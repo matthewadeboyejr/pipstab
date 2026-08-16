@@ -17,34 +17,53 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pipstab.com"),
+  alternates: {
+    canonical: "/",
+  },
   title: {
-    default: "PipTab — Cognitive Trading OS",
+    default: "PipTab — Cognitive Trading OS & Institutional Journal",
     template: "%s | PipTab"
   },
-  description: "Stop gambling, start journaling. The cognitive operating system for disciplined traders. Track performance, analyze setups, and master your trading psychology.",
-  keywords: ["trading journal", "forex trading", "trading psychology", "crypto journal", "trading performance", "cognitive trading", "trading log"],
-  authors: [{ name: "PipTab Team" }],
-  creator: "PipTab",
+  description: "The institutional operating system for disciplined traders. Track multi-timeframe setups, run Gemini AI performance audits, monitor central bank macro policies, and eliminate trading tilt.",
+  keywords: [
+    "trading journal",
+    "forex trading journal",
+    "crypto trading journal",
+    "prop firm journal",
+    "trading psychology",
+    "AI trading auditor",
+    "top-down market outlook",
+    "institutional strategy dossier",
+    "macro economic calendar",
+    "central bank policy matrix",
+    "Deriv trading journal",
+    "FTMO trade analytics",
+    "risk reward calculator",
+    "alpha leakage detection"
+  ],
+  authors: [{ name: "PipTab Team", url: "https://pipstab.com" }],
+  creator: "PipTab Analytics",
+  publisher: "PipTab",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://pipstab.com",
-    siteName: "PipTab",
-    title: "PipTab — Cognitive Trading OS",
-    description: "The cognitive operating system for disciplined traders. Stop gambling, start journaling.",
+    siteName: "PipTab Analytics",
+    title: "PipTab — Cognitive Trading OS & Institutional Journal",
+    description: "The institutional operating system for disciplined traders. Track multi-timeframe setups, run Gemini AI performance audits, and master your trading edge.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "PipTab — Cognitive Trading OS",
+        alt: "PipTab — Cognitive Trading OS & Institutional Journal",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PipTab — Cognitive Trading OS",
-    description: "The cognitive operating system for disciplined traders. Stop gambling, start journaling.",
+    title: "PipTab — Cognitive Trading OS & Institutional Journal",
+    description: "The institutional operating system for disciplined traders. Track performance, analyze setups, and master your trading edge.",
     images: ["/og-image.png"],
     creator: "@pipstab",
   },
@@ -83,6 +102,30 @@ export default function RootLayout({
                 } catch (e) {}
               })();
             `,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "PipTab",
+              "applicationCategory": "FinanceApplication",
+              "operatingSystem": "Web, iOS, Android",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "description": "Cognitive operating system and institutional trading journal for forex, crypto, and futures traders.",
+              "url": "https://pipstab.com",
+              "publisher": {
+                "@type": "Organization",
+                "name": "PipTab Analytics",
+                "url": "https://pipstab.com"
+              }
+            }),
           }}
         />
       </head>
