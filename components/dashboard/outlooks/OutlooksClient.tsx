@@ -22,6 +22,7 @@ import {
     ChevronRight,
     Check,
     CheckCircle2,
+    Zap,
 } from "lucide-react";
 import CreateOutlookModal, { OutlookItem } from "./CreateOutlookModal";
 import OutlookDossierModal from "./OutlookDossierModal";
@@ -56,6 +57,7 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
     const [editingOutlook, setEditingOutlook] = useState<OutlookItem | null>(null);
     const [deletingOutlookId, setDeletingOutlookId] = useState<string | null>(null);
     const [dossierOutlook, setDossierOutlook] = useState<OutlookItem | null>(null);
+    const [autoAudit, setAutoAudit] = useState(false);
 
     // Active timeframe stage per card: Record<outlookId, "htf" | "itf" | "ltf" | "poi">
     const [activeStages, setActiveStages] = useState<Record<string, "htf" | "itf" | "ltf" | "poi">>({});
@@ -311,7 +313,22 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
                                         </div>
 
                                         <button
-                                            onClick={() => setDossierOutlook(outlook)}
+                                            onClick={() => {
+                                                setAutoAudit(true);
+                                                setDossierOutlook(outlook);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all mr-1"
+                                            title="AI Strategy Audit & Confluence Rating"
+                                        >
+                                            <Zap className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">AI Review</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setAutoAudit(false);
+                                                setDossierOutlook(outlook);
+                                            }}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs font-bold text-accent hover:bg-accent/20 transition-all mr-1"
                                             title="Export PDF / Share Dossier"
                                         >
@@ -458,8 +475,12 @@ export default function OutlooksClient({ initialOutlooks }: OutlooksClientProps)
             {/* Outlook Dossier / PDF Modal */}
             <OutlookDossierModal
                 open={!!dossierOutlook}
-                onClose={() => setDossierOutlook(null)}
+                onClose={() => {
+                    setDossierOutlook(null);
+                    setAutoAudit(false);
+                }}
                 outlook={dossierOutlook}
+                autoAudit={autoAudit}
             />
 
             {/* Delete Confirmation Modal */}
