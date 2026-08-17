@@ -11,7 +11,7 @@ export interface SendInviteParams {
 export async function sendEarlyAccessInviteEmail({
   email,
   fullName,
-  appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://piptab.com",
+  appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pipstab.com",
 }: SendInviteParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
@@ -147,7 +147,7 @@ export async function sendCustomBroadcastEmail({
   subject,
   headline,
   messageBody,
-  actionUrl = "https://piptab.com",
+  actionUrl = "https://pipstab.com/performance",
   actionLabel = "Open PipTab Platform",
 }: BroadcastEmailParams): Promise<{ success: boolean; sentCount: number; errors: string[] }> {
   const apiKey = process.env.BREVO_API_KEY;

@@ -130,7 +130,7 @@ const Signin = () => {
               </div>
 
               <Button
-                onClick={() => router.push("/overview")}
+                onClick={() => router.push("/performance")}
                 className="hover:bg-accent bg-secondary flex items-center justify-center gap-3 w-full form-btn text-muted-foreground hover:text-accent-foreground"
               >
                 <Image src={googleimg} className="mr-2" alt="googleimg" />

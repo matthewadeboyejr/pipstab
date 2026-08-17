@@ -39,7 +39,7 @@ export default function AdminBroadcastPage() {
     const [emailSubject, setEmailSubject] = useState("");
     const [emailHeadline, setEmailHeadline] = useState("");
     const [emailBody, setEmailBody] = useState("");
-    const [emailActionUrl, setEmailActionUrl] = useState("https://piptab.com");
+    const [emailActionUrl, setEmailActionUrl] = useState("https://pipstab.com/performance");
     const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     const fetchBroadcasts = async () => {

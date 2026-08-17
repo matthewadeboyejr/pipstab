@@ -122,7 +122,7 @@ export async function POST(req: Request) {
                     subject: `[PipTab Update] ${title}`,
                     headline: title,
                     messageBody: message,
-                    actionUrl: link_url || "https://piptab.com",
+                    actionUrl: link_url || "https://pipstab.com/performance",
                     actionLabel: "Open Platform",
                 });
             }
