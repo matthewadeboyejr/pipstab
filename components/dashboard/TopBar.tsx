@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Search, Bell, Plus, Menu, Sun, Moon } from "lucide-react";
+import { Search, Bell, Plus, Menu, Sun, Moon, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
@@ -89,6 +89,20 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                         className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none w-full font-['Montserrat']"
                     />
                 </div>
+
+                {/* Product Tour Guide */}
+                <button
+                    onClick={() => {
+                        if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("open-product-tour"));
+                        }
+                    }}
+                    className="p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                    title="Interactive Terminal Tour Guide"
+                    aria-label="Interactive Terminal Tour Guide"
+                >
+                    <Compass className="w-5 h-5" />
+                </button>
 
                 {/* Theme toggle */}
                 <button

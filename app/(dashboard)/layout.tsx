@@ -5,6 +5,7 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import TopBar from "@/components/dashboard/TopBar";
 import MobileSidebar from "@/components/dashboard/MobileSidebar";
 import BroadcastBanner from "@/components/dashboard/BroadcastBanner";
+import ProductTourModal from "@/components/dashboard/onboarding/ProductTourModal";
 
 export default function DashboardLayout({
     children,
@@ -29,6 +30,9 @@ export default function DashboardLayout({
                 <BroadcastBanner />
                 <main className="flex-1 p-4 md:p-6 overflow-x-hidden">{children}</main>
             </div>
+
+            {/* Interactive Onboarding Tour Modal */}
+            <ProductTourModal />
         </div>
     );
 }
