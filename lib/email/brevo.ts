@@ -3,31 +3,31 @@
  */
 
 export interface SendInviteParams {
-    email: string;
-    fullName: string;
-    appUrl?: string;
+  email: string;
+  fullName: string;
+  appUrl?: string;
 }
 
 export async function sendEarlyAccessInviteEmail({
-    email,
-    fullName,
-    appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://piptab.com",
+  email,
+  fullName,
+  appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://piptab.com",
 }: SendInviteParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
-    const senderName = process.env.BREVO_SENDER_NAME || "PipTab Team";
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
+  const senderName = process.env.BREVO_SENDER_NAME || "PipTab Team";
 
-    if (!apiKey) {
-        console.warn("BREVO_API_KEY is not configured in environment variables.");
-        return {
-            success: false,
-            error: "BREVO_API_KEY not configured. Add it to .env.local to enable live email delivery.",
-        };
-    }
+  if (!apiKey) {
+    console.warn("BREVO_API_KEY is not configured in environment variables.");
+    return {
+      success: false,
+      error: "BREVO_API_KEY not configured. Add it to .env.local to enable live email delivery.",
+    };
+  }
 
-    const signUpUrl = `${appUrl}/auth/sign-up?email=${encodeURIComponent(email)}`;
+  const signUpUrl = `${appUrl}/auth/sign-up?email=${encodeURIComponent(email)}`;
 
-    const htmlContent = `
+  const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -86,87 +86,87 @@ export async function sendEarlyAccessInviteEmail({
 </html>
     `;
 
-    try {
-        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-            method: "POST",
-            headers: {
-                "api-key": apiKey,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-            body: JSON.stringify({
-                sender: {
-                    name: senderName,
-                    email: senderEmail,
-                },
-                to: [
-                    {
-                        email: email,
-                        name: fullName,
-                    },
-                ],
-                subject: "You're Invited: Exclusive Early Access to PipTab 🚀",
-                htmlContent: htmlContent,
-            }),
-        });
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          name: senderName,
+          email: senderEmail,
+        },
+        to: [
+          {
+            email: email,
+            name: fullName,
+          },
+        ],
+        subject: "You're Invited: Exclusive Early Access to PipTab 🚀",
+        htmlContent: htmlContent,
+      }),
+    });
 
-        if (!response.ok) {
-            const errData = await response.json();
-            console.error("Brevo API Error:", errData);
-            return {
-                success: false,
-                error: errData.message || `Brevo returned status ${response.status}`,
-            };
-        }
-
-        const data = await response.json();
-        return {
-            success: true,
-            messageId: data.messageId,
-        };
-    } catch (e: any) {
-        console.error("Brevo Dispatch Network Error:", e);
-        return {
-            success: false,
-            error: e.message || "Failed to contact Brevo SMTP API",
-        };
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error("Brevo API Error:", errData);
+      return {
+        success: false,
+        error: errData.message || `Brevo returned status ${response.status}`,
+      };
     }
+
+    const data = await response.json();
+    return {
+      success: true,
+      messageId: data.messageId,
+    };
+  } catch (e: any) {
+    console.error("Brevo Dispatch Network Error:", e);
+    return {
+      success: false,
+      error: e.message || "Failed to contact Brevo SMTP API",
+    };
+  }
 }
 
 export interface BroadcastEmailParams {
-    recipients: Array<{ email: string; name?: string }>;
-    subject: string;
-    headline: string;
-    messageBody: string;
-    actionUrl?: string;
-    actionLabel?: string;
+  recipients: Array<{ email: string; name?: string }>;
+  subject: string;
+  headline: string;
+  messageBody: string;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
 export async function sendCustomBroadcastEmail({
-    recipients,
-    subject,
-    headline,
-    messageBody,
-    actionUrl = "https://piptab.com",
-    actionLabel = "Open PipTab Platform",
+  recipients,
+  subject,
+  headline,
+  messageBody,
+  actionUrl = "https://piptab.com",
+  actionLabel = "Open PipTab Platform",
 }: BroadcastEmailParams): Promise<{ success: boolean; sentCount: number; errors: string[] }> {
-    const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
-    const senderName = process.env.BREVO_SENDER_NAME || "PipTab Announcements";
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
+  const senderName = process.env.BREVO_SENDER_NAME || "PipTab Announcements";
 
-    if (!apiKey) {
-        return {
-            success: false,
-            sentCount: 0,
-            errors: ["BREVO_API_KEY is not configured in .env.local"],
-        };
-    }
+  if (!apiKey) {
+    return {
+      success: false,
+      sentCount: 0,
+      errors: ["BREVO_API_KEY is not configured in .env.local"],
+    };
+  }
 
-    let sentCount = 0;
-    const errors: string[] = [];
+  let sentCount = 0;
+  const errors: string[] = [];
 
-    // Format HTML email
-    const generateHtml = (name: string) => `
+  // Format HTML email
+  const generateHtml = (name: string) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -210,62 +210,62 @@ export async function sendCustomBroadcastEmail({
 </html>
     `;
 
-    // Process in batches
-    for (const recipient of recipients) {
-        try {
-            const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-                method: "POST",
-                headers: {
-                    "api-key": apiKey,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                body: JSON.stringify({
-                    sender: { name: senderName, email: senderEmail },
-                    to: [{ email: recipient.email, name: recipient.name || "Trader" }],
-                    subject: subject,
-                    htmlContent: generateHtml(recipient.name || "Trader"),
-                }),
-            });
+  // Process in batches
+  for (const recipient of recipients) {
+    try {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: recipient.email, name: recipient.name || "Trader" }],
+          subject: subject,
+          htmlContent: generateHtml(recipient.name || "Trader"),
+        }),
+      });
 
-            if (res.ok) {
-                sentCount++;
-            } else {
-                const err = await res.json();
-                errors.push(`${recipient.email}: ${err.message || res.statusText}`);
-            }
-        } catch (err: any) {
-            errors.push(`${recipient.email}: ${err.message}`);
-        }
+      if (res.ok) {
+        sentCount++;
+      } else {
+        const err = await res.json();
+        errors.push(`${recipient.email}: ${err.message || res.statusText}`);
+      }
+    } catch (err: any) {
+      errors.push(`${recipient.email}: ${err.message}`);
     }
+  }
 
-    return {
-        success: sentCount > 0,
-        sentCount,
-        errors,
-    };
+  return {
+    success: sentCount > 0,
+    sentCount,
+    errors,
+  };
 }
 
 export async function getBrevoAccountInfo(): Promise<{ plan?: string; creditsRemaining?: number; creditsTotal?: number; error?: string }> {
-    const apiKey = process.env.BREVO_API_KEY;
-    if (!apiKey) return { error: "BREVO_API_KEY not configured" };
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) return { error: "BREVO_API_KEY not configured" };
 
-    try {
-        const res = await fetch("https://api.brevo.com/v3/account", {
-            headers: {
-                "api-key": apiKey,
-                "Accept": "application/json",
-            },
-        });
-        if (!res.ok) return { error: `Brevo returned status ${res.status}` };
-        const data = await res.json();
-        const plan = data.plan?.[0];
-        return {
-            plan: plan?.type || "Free Tier",
-            creditsRemaining: plan?.credits || 300,
-            creditsTotal: 300,
-        };
-    } catch (e: any) {
-        return { error: e.message };
-    }
+  try {
+    const res = await fetch("https://api.brevo.com/v3/account", {
+      headers: {
+        "api-key": apiKey,
+        "Accept": "application/json",
+      },
+    });
+    if (!res.ok) return { error: `Brevo returned status ${res.status}` };
+    const data = await res.json();
+    const plan = data.plan?.[0];
+    return {
+      plan: plan?.type || "Free Tier",
+      creditsRemaining: plan?.credits || 300,
+      creditsTotal: 300,
+    };
+  } catch (e: any) {
+    return { error: e.message };
+  }
 }
