@@ -102,12 +102,15 @@ export default async function OverviewPage() {
         pair: t.pair || "Unknown",
         direction: (t.direction || "long").toLowerCase(),
         pnl: Number(t.pnl) || 0,
+        raw_pnl: Number(t.pnl) || 0,
         rr: t.rr || "-",
         setup: t.setup || "None",
-        date: t.date ? new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "N/A",
+        session: t.session || "New York",
+        date: t.date || new Date().toISOString(),
         rawDate: t.date || null,
         emotion: t.emotion || "Neutral",
-        account_id: t.account_id || null
+        checklist_results: t.checklist_results || {},
+        account_id: t.account_id || null,
     }));
 
     const kpiStats = {
