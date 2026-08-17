@@ -74,7 +74,7 @@ function OverviewContent({
 
     const handleTabChange = (tab: "overview" | "quant" | "violations") => {
         setActiveTab(tab);
-        router.push(`/overview?tab=${tab}`, { scroll: false });
+        router.push(`/performance?tab=${tab}`, { scroll: false });
     };
 
     // 1. Filter trades reactively based on activeAccount

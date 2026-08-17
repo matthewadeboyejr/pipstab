@@ -50,7 +50,7 @@ const Signup = () => {
     }
 
     addToast("Account created successfully! Please check your email to verify.", "success");
-    router.push("/overview");
+    router.push("/performance");
   };
 
   return (

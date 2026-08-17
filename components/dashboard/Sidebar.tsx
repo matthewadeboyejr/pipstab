@@ -26,7 +26,7 @@ const navSections = [
     {
         label: "Core",
         items: [
-            { href: "/overview", label: "Performance", icon: BarChart3 },
+            { href: "/performance", label: "Performance", icon: BarChart3 },
             { href: "/outlooks", label: "Outlooks", icon: Compass },
             { href: "/journal", label: "Journal", icon: BookOpen },
             { href: "/setups", label: "Setups & Rules", icon: ListChecks },
@@ -118,7 +118,7 @@ export default function Sidebar() {
         >
             {/* Logo */}
             <div className="flex items-center justify-between h-16 px-4 shrink-0">
-                <Link href="/overview" className="flex items-center gap-2 overflow-hidden">
+                <Link href="/performance" className="flex items-center gap-2 overflow-hidden">
                     <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
                         <Zap className="w-4 h-4 text-accent-foreground" />
                     </div>

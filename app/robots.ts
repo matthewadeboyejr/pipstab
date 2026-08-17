@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/outlooks',
           '/journal',
           '/macro',
-          '/analytics',
+          '/performance',
           '/psychology',
           '/setups',
           '/auth/sign-in',

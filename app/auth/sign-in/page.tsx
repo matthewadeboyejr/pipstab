@@ -42,7 +42,7 @@ const Signin = () => {
     }
 
     addToast("Signed in successfully!", "success");
-    router.push("/overview");
+    router.push("/performance");
   };
 
   return (

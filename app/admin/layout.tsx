@@ -11,7 +11,7 @@ export default async function AdminLayout({
     try {
         await requireAdmin();
     } catch (error) {
-        redirect("/overview");
+        redirect("/performance");
     }
 
     return (

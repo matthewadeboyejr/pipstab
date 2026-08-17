@@ -167,7 +167,7 @@ const Hero = () => {
             </div>
             <div className="flex-1 mx-8">
               <div className="bg-secondary/80 rounded-lg px-3 py-1 text-[10px] text-muted-foreground text-center font-['Montserrat'] max-w-[240px] mx-auto">
-                app.piptab.io/overview
+                app.piptab.io/performance
               </div>
             </div>
           </div>

@@ -10,11 +10,12 @@ import { createClient } from "@/utils/supabase/client";
 import AccountSelector from "@/components/dashboard/AccountSelector";
 
 const routeTitles: Record<string, string> = {
-    "/overview": "Overview",
+    "/performance": "Performance & Edge Analytics",
+    "/overview": "Performance & Edge Analytics",
     "/outlooks": "Top-Down Market Outlooks",
     "/journal": "Trade Journal",
     "/setups": "Setups & Trading Rules",
-    "/analytics": "Analytics & Alpha Leakage",
+    "/analytics": "Performance & Edge Analytics",
     "/macro": "Macro & Intel",
     "/fundamentals": "AI Fundamental Analysis",
     "/psychology": "Psychology Profile",
@@ -43,8 +44,8 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         fetchUser();
     }, []);
 
-    // Create a personalized title if on overview
-    const displayTitle = (pathname === "/overview" && firstName) ? `Welcome back, ${firstName}` : title;
+    // Create a personalized title if on performance/overview
+    const displayTitle = ((pathname === "/performance" || pathname === "/overview") && firstName) ? `Welcome back, ${firstName}` : title;
 
     return (
         <motion.header

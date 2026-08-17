@@ -74,7 +74,7 @@ export default function AdminSidebar() {
             {/* Footer Back Link */}
             <div className="p-3 border-t border-border/30 bg-white/[0.01]">
                 <Link
-                    href="/overview"
+                    href="/performance"
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                 >
                     <ArrowLeft className="w-4 h-4" />

@@ -3,14 +3,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LayoutDashboard, BookOpen, BarChart3, Globe2, Sparkles, Brain, Settings, Zap } from "lucide-react";
+import { X, LayoutDashboard, BookOpen, BarChart3, Globe2, Sparkles, Brain, Settings, Zap, Compass, ListChecks } from "lucide-react";
 
 const navItems = [
-    { href: "/overview", label: "Overview", icon: LayoutDashboard },
+    { href: "/performance", label: "Performance", icon: BarChart3 },
+    { href: "/outlooks", label: "Outlooks", icon: Compass },
     { href: "/journal", label: "Journal", icon: BookOpen },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/macro", label: "Macro", icon: Globe2 },
-    { href: "/fundamentals", label: "AI Fundamentals", icon: Sparkles },
+    { href: "/setups", label: "Setups & Rules", icon: ListChecks },
+    { href: "/macro", label: "Macro & Intel", icon: Globe2 },
     { href: "/psychology", label: "Psychology", icon: Brain },
     { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -46,7 +46,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between h-16 px-4">
-                            <Link href="/overview" className="flex items-center gap-2" onClick={onClose}>
+                            <Link href="/performance" className="flex items-center gap-2" onClick={onClose}>
                                 <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                                     <Zap className="w-4 h-4 text-accent-foreground" />
                                 </div>
