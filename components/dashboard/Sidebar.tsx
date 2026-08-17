@@ -26,7 +26,7 @@ const navSections = [
     {
         label: "Core",
         items: [
-            { href: "/overview", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/overview", label: "Performance", icon: BarChart3 },
             { href: "/outlooks", label: "Outlooks", icon: Compass },
             { href: "/journal", label: "Journal", icon: BookOpen },
             { href: "/setups", label: "Setups & Rules", icon: ListChecks },
