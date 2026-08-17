@@ -140,40 +140,6 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-6">
-
-                {/* Missing Check-in Warning */}
-                <AnimatePresence>
-                    {!hasCheckedIn && pathname !== "/psychology" && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, height: "auto", scale: 1 }}
-                            exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                            className="mb-6"
-                        >
-                            <Link href="/psychology" className="block p-3 rounded-xl bg-amber-400/10 border border-amber-400/20 hover:bg-amber-400/20 transition-colors group relative overflow-hidden">
-                                <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                                <div className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-amber-400/20 flex flex-col items-center justify-center shrink-0">
-                                        <AlertTriangle className="w-4 h-4 text-amber-500 mb-0.5" />
-                                    </div>
-                                    <AnimatePresence>
-                                        {!collapsed && (
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                            >
-                                                <p className="text-xs font-bold text-amber-500 font-['Montserrat'] mb-0.5">Missing Check-in</p>
-                                                <p className="text-[10px] text-amber-500/80 leading-tight">Complete your daily psychology log to trade safely.</p>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            </Link>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
                 {navSections.map((section) => (
                     <div key={section.label}>
                         <AnimatePresence>
@@ -192,6 +158,8 @@ export default function Sidebar() {
                             {section.items.map((item) => {
                                 const isActive = pathname === item.href;
                                 const Icon = item.icon;
+                                const isPsychologyMissing = item.href === "/psychology" && !hasCheckedIn;
+
                                 return (
                                     <li key={item.href}>
                                         <Link
@@ -208,10 +176,15 @@ export default function Sidebar() {
                                                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                                                 />
                                             )}
-                                            <Icon
-                                                className={`w-5 h-5 shrink-0 relative z-10 transition-colors ${isActive ? "text-accent" : "text-muted-foreground group-hover:text-sidebar-foreground"
-                                                    }`}
-                                            />
+                                            <div className="relative">
+                                                <Icon
+                                                    className={`w-5 h-5 shrink-0 relative z-10 transition-colors ${isActive ? "text-accent" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                                                        }`}
+                                                />
+                                                {collapsed && isPsychologyMissing && (
+                                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse z-20" />
+                                                )}
+                                            </div>
                                             <AnimatePresence>
                                                 {!collapsed && (
                                                     <motion.span
@@ -219,9 +192,17 @@ export default function Sidebar() {
                                                         animate={{ opacity: 1, width: "auto" }}
                                                         exit={{ opacity: 0, width: 0 }}
                                                         transition={{ duration: 0.2 }}
-                                                        className="relative z-10 whitespace-nowrap overflow-hidden"
+                                                        className="relative z-10 whitespace-nowrap overflow-hidden flex-1 flex items-center justify-between"
                                                     >
-                                                        {item.label}
+                                                        <span>{item.label}</span>
+                                                        {isPsychologyMissing && (
+                                                            <span
+                                                                className="flex items-center gap-1 text-[10px] font-bold text-amber-400 font-mono"
+                                                                title="Daily readiness check-in pending"
+                                                            >
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                                            </span>
+                                                        )}
                                                     </motion.span>
                                                 )}
                                             </AnimatePresence>

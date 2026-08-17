@@ -15,6 +15,9 @@ const navItems = [
     { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+
 interface MobileSidebarProps {
     open: boolean;
     onClose: () => void;
@@ -22,6 +25,26 @@ interface MobileSidebarProps {
 
 export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
     const pathname = usePathname();
+    const supabase = createClient();
+    const [hasCheckedIn, setHasCheckedIn] = useState(true);
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const { data } = await supabase
+                    .from('checkins')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('date', todayStr)
+                    .limit(1);
+
+                setHasCheckedIn(!!data && data.length > 0);
+            }
+        };
+        checkStatus();
+    }, [pathname]);
 
     return (
         <AnimatePresence>
@@ -66,6 +89,8 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                                 {navItems.map((item, i) => {
                                     const isActive = pathname === item.href;
                                     const Icon = item.icon;
+                                    const isPsychologyMissing = item.href === "/psychology" && !hasCheckedIn;
+
                                     return (
                                         <motion.li
                                             key={item.href}
@@ -76,13 +101,18 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                                             <Link
                                                 href={item.href}
                                                 onClick={onClose}
-                                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                                                className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                                                     ? "bg-accent/10 text-accent border border-accent/20"
                                                     : "text-muted-foreground hover:text-sidebar-foreground hover:bg-white/5"
                                                     }`}
                                             >
-                                                <Icon className="w-5 h-5" />
-                                                <span>{item.label}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <Icon className="w-5 h-5" />
+                                                    <span>{item.label}</span>
+                                                </div>
+                                                {isPsychologyMissing && (
+                                                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Daily check-in pending" />
+                                                )}
                                             </Link>
                                         </motion.li>
                                     );
