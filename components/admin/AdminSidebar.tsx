@@ -72,14 +72,20 @@ export default function AdminSidebar() {
             </nav>
 
             {/* Footer Back Link */}
-            <div className="p-3 border-t border-border/30 bg-white/[0.01]">
+            <div className="p-3 border-t border-border/30 bg-white/[0.01] space-y-2">
                 <Link
                     href="/performance"
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back to Trader App</span>
                 </Link>
+                <div className="px-3 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                    <span className="flex items-center gap-1.5 text-foreground/70">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Core Engine
+                    </span>
+                    <span className="font-bold text-accent/80">v2.4.0-beta</span>
+                </div>
             </div>
         </aside>
     );

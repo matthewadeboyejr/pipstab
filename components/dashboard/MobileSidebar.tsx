@@ -73,7 +73,10 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                                 <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                                     <Zap className="w-4 h-4 text-accent-foreground" />
                                 </div>
-                                <span className="text-lg font-bold text-sidebar-foreground font-['Montserrat']">pipTAB</span>
+                                <span className="text-lg font-black text-sidebar-foreground font-['Montserrat'] tracking-tighter">PIPSTAB<span className="text-accent">.</span></span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-mono font-black text-accent">
+                                    v2.4-beta
+                                </span>
                             </Link>
                             <button
                                 onClick={onClose}
@@ -122,14 +125,17 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
 
                         {/* User */}
                         <div className="px-4 py-4 border-t border-sidebar-border">
-                            <div className="flex items-center gap-3 px-3 py-2">
-                                <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
-                                    <span className="text-xs font-bold text-accent">T</span>
+                            <div className="flex items-center justify-between px-3 py-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
+                                        <span className="text-xs font-bold text-accent">T</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-sidebar-foreground">Trader</p>
+                                        <p className="text-[11px] text-muted-foreground">Free Plan</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-sidebar-foreground">Trader</p>
-                                    <p className="text-[11px] text-muted-foreground">Free Plan</p>
-                                </div>
+                                <span className="text-[10px] font-mono font-bold text-accent/80">v2.4.0-beta</span>
                             </div>
                         </div>
                     </motion.div>

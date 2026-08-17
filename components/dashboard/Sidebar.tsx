@@ -124,15 +124,20 @@ export default function Sidebar() {
                     </div>
                     <AnimatePresence>
                         {!collapsed && (
-                            <motion.span
+                            <motion.div
                                 initial={{ opacity: 0, width: 0 }}
                                 animate={{ opacity: 1, width: "auto" }}
                                 exit={{ opacity: 0, width: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="text-lg font-black text-sidebar-foreground whitespace-nowrap font-['Montserrat'] tracking-tighter"
+                                className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden"
                             >
-                                PIPSTAB<span className="text-accent text-3xl">.</span>
-                            </motion.span>
+                                <span className="text-lg font-black text-sidebar-foreground font-['Montserrat'] tracking-tighter">
+                                    PIPSTAB<span className="text-accent text-3xl">.</span>
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-mono font-black text-accent tracking-normal">
+                                    v2.4-beta
+                                </span>
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </Link>
@@ -261,6 +266,23 @@ export default function Sidebar() {
                         )}
                     </AnimatePresence>
                 </div>
+
+                {/* Platform Version Footer */}
+                <AnimatePresence>
+                    {!collapsed && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="px-3 py-1 flex items-center justify-between text-[10px] text-muted-foreground font-mono"
+                        >
+                            <span className="flex items-center gap-1.5 text-foreground/70">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Terminal
+                            </span>
+                            <span className="font-bold text-accent/80">v2.4.0-beta</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Log Out button */}
                 <button
