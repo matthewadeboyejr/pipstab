@@ -1,11 +1,14 @@
 import MacroClient from "@/components/dashboard/macro/MacroClient";
 import Parser from "rss-parser";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Free, fast ForexFactory calendar API (unofficial)
 async function getCalendar() {
     try {
         const res = await fetch("https://nfs.faireconomy.media/ff_calendar_thisweek.json", {
-            next: { revalidate: 3600 } // Cache for 1 hour
+            cache: "no-store"
         });
         if (!res.ok) return [];
         return await res.json();
@@ -37,8 +40,6 @@ async function getNews() {
     }
 }
 
-export const revalidate = 900; // 15 minutes
-
 export default async function MacroPage() {
     const [calendar, news] = await Promise.all([
         getCalendar(),
@@ -53,7 +54,8 @@ export default async function MacroPage() {
             title: ev.title,
             country: ev.country,
             date: ev.date,
-            impact: ev.impact.toLowerCase(), // "high", "medium", "low"
+            impact: (ev.impact || "medium").toLowerCase(), // "high", "medium", "low"
+            actual: ev.actual !== undefined && ev.actual !== "" ? ev.actual : null,
             forecast: ev.forecast || "—",
             previous: ev.previous || "—",
         }));

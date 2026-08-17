@@ -59,7 +59,9 @@ export default function EconomicCalendar() {
     const fetchCalendar = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch("/api/fundamentals/calendar");
+            const response = await fetch("/api/fundamentals/calendar", {
+                cache: "no-store",
+            });
             const data = await response.json();
             if (Array.isArray(data)) {
                 setEvents(data);
@@ -127,6 +129,17 @@ export default function EconomicCalendar() {
         if (i === "high") return "bg-red-500/10 text-red-400 border-red-500/20";
         if (i === "medium") return "bg-amber-500/10 text-amber-400 border-amber-500/20";
         return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+    };
+
+    const getActualHighlight = (actual: string | null, estimate: string, prev: string) => {
+        if (!actual || actual === "Pending") return "text-muted-foreground/60 italic";
+        const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ""));
+        const estNum = parseFloat((estimate || prev || "").replace(/[^0-9.-]/g, ""));
+        if (!isNaN(actNum) && !isNaN(estNum) && estNum !== 0) {
+            if (actNum > estNum) return "text-emerald-400 font-black";
+            if (actNum < estNum) return "text-red-400 font-black";
+        }
+        return "text-accent font-black";
     };
 
     const formatDateLabel = (dateStr: string) => {
@@ -422,14 +435,8 @@ Economic release projections and deviation guidelines are for educational and ri
                                                         <p className="text-[9px] uppercase font-bold text-muted-foreground">
                                                             Actual
                                                         </p>
-                                                        <p
-                                                            className={`text-xs font-extrabold font-mono ${
-                                                                event.actual !== null
-                                                                    ? "text-accent"
-                                                                    : "text-muted-foreground/60 italic"
-                                                            }`}
-                                                        >
-                                                            {event.actual !== null ? event.actual : "Pending"}
+                                                        <p className={`text-xs font-mono ${getActualHighlight(event.actual, event.estimate, event.prev)}`}>
+                                                            {event.actual !== null && event.actual !== "" ? event.actual : "Pending"}
                                                         </p>
                                                     </div>
                                                     <div className="pl-2 border-l border-border/20 text-muted-foreground group-hover:text-foreground">
