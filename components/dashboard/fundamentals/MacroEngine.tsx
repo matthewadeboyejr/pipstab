@@ -112,7 +112,11 @@ const convictionBadges = {
     Low: "bg-blue-400/10 text-blue-400 border-blue-400/20",
 };
 
-export default function MacroEngine() {
+interface MacroEngineProps {
+    mode?: "all" | "pairs" | "central_banks";
+}
+
+export default function MacroEngine({ mode = "all" }: MacroEngineProps) {
     const [selectedPairs, setSelectedPairs] = useState<string[]>(["EURUSD", "XAUUSD", "USDJPY"]);
     const [activePreset, setActivePreset] = useState<string>("majors");
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -245,190 +249,198 @@ This analysis is generated for educational, informational, and research purposes
 
     return (
         <div className="space-y-6">
-            {/* Global Macro Barometer */}
-            <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-card border border-border/50 p-5 shadow-sm space-y-4"
-            >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
-                            <Activity className="w-4 h-4 text-accent" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
-                                Global Macro & Cross-Asset Barometer
-                            </h3>
-                            <p className="text-[11px] text-muted-foreground">
-                                Real-time baseline macroeconomic anchors and liquidity conditions
-                            </p>
-                        </div>
-                    </div>
+            {/* Central Bank Matrix & Global Barometer (Shown if mode !== 'pairs') */}
+            {mode !== "pairs" && (
+                <>
+                    {/* Global Macro Barometer */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-2xl bg-card border border-border/50 p-5 shadow-sm space-y-4"
+                    >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                                    <Activity className="w-4 h-4 text-accent" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
+                                        Global Macro & Cross-Asset Barometer
+                                    </h3>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Real-time baseline macroeconomic anchors and liquidity conditions
+                                    </p>
+                                </div>
+                            </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/5 border border-accent/20 w-fit">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[11px] font-bold text-foreground">
-                            Regime: <span className="text-accent">{globalRegime}</span>
-                        </span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
-                    {GLOBAL_MACRO_INDICATORS.map((ind) => (
-                        <div
-                            key={ind.id}
-                            className="p-3.5 rounded-xl bg-white/[0.02] border border-border/30 hover:border-accent/20 transition-all group"
-                        >
-                            <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
-                                    {ind.symbol}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/5 border border-accent/20 w-fit">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="text-[11px] font-bold text-foreground">
+                                    Regime: <span className="text-accent">{globalRegime}</span>
                                 </span>
-                                <span
-                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${ind.status === "Bullish" || ind.status === "Risk-On"
-                                            ? "bg-emerald-500/10 text-emerald-400"
-                                            : ind.status === "Bearish" || ind.status === "Risk-Off"
-                                                ? "bg-red-500/10 text-red-400"
-                                                : "bg-white/5 text-muted-foreground"
-                                        }`}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+                            {GLOBAL_MACRO_INDICATORS.map((ind) => (
+                                <div
+                                    key={ind.id}
+                                    className="p-3.5 rounded-xl bg-white/[0.02] border border-border/30 hover:border-accent/20 transition-all group"
                                 >
-                                    {ind.status}
-                                </span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-base font-bold text-foreground font-['Montserrat']">
-                                    {ind.value}
-                                </span>
-                                <span
-                                    className={`text-[10px] font-semibold ${ind.change.startsWith("+")
-                                            ? "text-emerald-400"
-                                            : ind.change.startsWith("-")
-                                                ? "text-blue-400"
-                                                : "text-muted-foreground"
-                                        }`}
-                                >
-                                    {ind.change}
-                                </span>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground/80 mt-1 line-clamp-1 group-hover:line-clamp-none transition-all">
-                                {ind.description}
-                            </p>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                                            {ind.symbol}
+                                        </span>
+                                        <span
+                                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${ind.status === "Bullish" || ind.status === "Risk-On"
+                                                    ? "bg-emerald-500/10 text-emerald-400"
+                                                    : ind.status === "Bearish" || ind.status === "Risk-Off"
+                                                        ? "bg-red-500/10 text-red-400"
+                                                        : "bg-white/5 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {ind.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-base font-bold text-foreground font-['Montserrat']">
+                                            {ind.value}
+                                        </span>
+                                        <span
+                                            className={`text-[10px] font-semibold ${ind.change.startsWith("+")
+                                                    ? "text-emerald-400"
+                                                    : ind.change.startsWith("-")
+                                                        ? "text-blue-400"
+                                                        : "text-muted-foreground"
+                                                }`}
+                                        >
+                                            {ind.change}
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground/80 mt-1 line-clamp-1 group-hover:line-clamp-none transition-all">
+                                        {ind.description}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </motion.div>
+                    </motion.div>
 
-            {/* Central Bank Policy Matrix (Collapsible) */}
-            <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 }}
-                className="rounded-2xl bg-card border border-border/50 overflow-hidden shadow-sm"
-            >
-                <button
-                    onClick={() => setShowCentralBanks(!showCentralBanks)}
-                    className="w-full px-5 py-4 flex items-center justify-between bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-border/30 text-left"
-                >
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
-                            <Scale className="w-4 h-4 text-accent" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
-                                    Global Central Bank Policy Matrix
-                                </h3>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold">
-                                    G8 Economies
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground">
-                                Benchmark interest rates, policy bias, and rate divergence differentials
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                        <span>{showCentralBanks ? "Hide Matrix" : "View Matrix"}</span>
-                        {showCentralBanks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                </button>
-
-                <AnimatePresence>
-                    {showCentralBanks && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-x-auto"
+                    {/* Central Bank Policy Matrix */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="rounded-2xl bg-card border border-border/50 overflow-hidden shadow-sm"
+                    >
+                        <button
+                            onClick={() => setShowCentralBanks(!showCentralBanks)}
+                            className="w-full px-5 py-4 flex items-center justify-between bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-border/30 text-left"
                         >
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-border/20 text-[10px] uppercase font-semibold text-muted-foreground tracking-wider bg-white/[0.01]">
-                                        <th className="px-5 py-3">Central Bank</th>
-                                        <th className="px-4 py-3">Policy Rate</th>
-                                        <th className="px-4 py-3">Bias / Stance</th>
-                                        <th className="px-4 py-3">Trend</th>
-                                        <th className="px-4 py-3">Next Decision</th>
-                                        <th className="px-5 py-3">Key Focus Driver</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/20 text-xs font-medium">
-                                    {Object.entries(CENTRAL_BANKS).map(([curr, cb]) => (
-                                        <tr key={curr} className="hover:bg-white/[0.02] transition-colors">
-                                            <td className="px-5 py-3 flex items-center gap-2.5">
-                                                <span className="text-base">{cb.flag}</span>
-                                                <div>
-                                                    <span className="font-bold text-foreground">{cb.code}</span>
-                                                    <span className="text-[10px] text-muted-foreground ml-1.5">
-                                                        ({cb.currency})
-                                                    </span>
-                                                    <p className="text-[10px] text-muted-foreground/80">{cb.name}</p>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className="font-bold text-accent font-mono text-sm">
-                                                    {cb.rateDisplay}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cb.bias === "Hawkish"
-                                                            ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                                            : cb.bias === "Dovish"
-                                                                ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                                                : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                                        }`}
-                                                >
-                                                    {cb.bias}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className="text-[11px] text-foreground font-semibold">
-                                                    {cb.trend}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-muted-foreground font-mono text-[11px]">
-                                                {cb.nextMeeting}
-                                            </td>
-                                            <td className="px-5 py-3 text-[11px] text-foreground/80 max-w-[280px]">
-                                                {cb.primaryDriver}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                                    <Scale className="w-4 h-4 text-accent" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-sm font-bold text-foreground font-['Montserrat']">
+                                            Global Central Bank Policy Matrix
+                                        </h3>
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold">
+                                            G8 Economies
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Benchmark interest rates, policy bias, and rate divergence differentials
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                                <span>{showCentralBanks ? "Hide Matrix" : "View Matrix"}</span>
+                                {showCentralBanks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                        </button>
 
-            {/* Analysis Control Bar & Presets */}
-            <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="rounded-2xl bg-card border border-border/50 p-6 space-y-5"
-            >
+                        <AnimatePresence>
+                            {showCentralBanks && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-x-auto"
+                                >
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-border/20 text-[10px] uppercase font-semibold text-muted-foreground tracking-wider bg-white/[0.01]">
+                                                <th className="px-5 py-3">Central Bank</th>
+                                                <th className="px-4 py-3">Policy Rate</th>
+                                                <th className="px-4 py-3">Bias / Stance</th>
+                                                <th className="px-4 py-3">Trend</th>
+                                                <th className="px-4 py-3">Next Decision</th>
+                                                <th className="px-5 py-3">Key Focus Driver</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/20 text-xs font-medium">
+                                            {Object.entries(CENTRAL_BANKS).map(([curr, cb]) => (
+                                                <tr key={curr} className="hover:bg-white/[0.02] transition-colors">
+                                                    <td className="px-5 py-3 flex items-center gap-2.5">
+                                                        <span className="text-base">{cb.flag}</span>
+                                                        <div>
+                                                            <span className="font-bold text-foreground">{cb.code}</span>
+                                                            <span className="text-[10px] text-muted-foreground ml-1.5">
+                                                                ({cb.currency})
+                                                            </span>
+                                                            <p className="text-[10px] text-muted-foreground/80">{cb.name}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="font-bold text-accent font-mono text-sm">
+                                                            {cb.rateDisplay}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span
+                                                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cb.bias === "Hawkish"
+                                                                    ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                                                    : cb.bias === "Dovish"
+                                                                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                                                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                                                }`}
+                                                        >
+                                                            {cb.bias}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="text-[11px] text-foreground font-semibold">
+                                                            {cb.trend}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-muted-foreground font-mono text-[11px]">
+                                                        {cb.nextMeeting}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-[11px] text-foreground/80 max-w-[280px]">
+                                                        {cb.primaryDriver}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.div>
+                </>
+            )}
+
+            {/* Pair Analysis Engine & Quantitative Multi-Factor Audit (Shown if mode !== 'central_banks') */}
+            {mode !== "central_banks" && (
+                <>
+                    {/* Analysis Control Bar & Presets */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="rounded-2xl bg-card border border-border/50 p-6 space-y-5"
+                    >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <div className="flex items-center gap-2">
@@ -881,6 +893,8 @@ This analysis is generated for educational, informational, and research purposes
                         Audit Default Preset ({selectedPairs.length} Pairs)
                     </button>
                 </motion.div>
+            )}
+                </>
             )}
 
             {/* Global Regulatory & Risk Disclosure Banner */}

@@ -70,18 +70,25 @@ const TOP_CARRY_PAIRS = [
 
 const MACRO_TABS = [
     { id: "terminal", label: "Macro Terminal", icon: Zap, color: "text-accent" },
-    { id: "calendar", label: "Economic Calendar", icon: Calendar, color: "text-amber-400" },
+    { id: "pairs", label: "Pair Analysis Engine", icon: Sparkles, color: "text-emerald-400" },
     { id: "central_banks", label: "Central Bank Matrix", icon: Landmark, color: "text-blue-400" },
+    { id: "calendar", label: "Economic Calendar", icon: Calendar, color: "text-amber-400" },
     { id: "news", label: "Sentiment Pulse", icon: Globe, color: "text-purple-400" },
 ];
+
+function resolveMacroTab(tabParam: string | null): string {
+    if (!tabParam) return "terminal";
+    if (tabParam === "macro") return "terminal";
+    if (tabParam === "pair_analysis" || tabParam === "pair" || tabParam === "pairs") return "pairs";
+    return tabParam;
+}
 
 function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    // Map any legacy tab names like "macro" to "terminal"
     const initialTabParam = searchParams.get("tab");
-    const resolvedInitialTab = initialTabParam === "macro" ? "terminal" : initialTabParam || "terminal";
+    const resolvedInitialTab = resolveMacroTab(initialTabParam);
 
     const [activeTab, setActiveTab] = useState(resolvedInitialTab);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -90,7 +97,7 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
     useEffect(() => {
         const tab = searchParams.get("tab");
         if (tab) {
-            const mapped = tab === "macro" ? "terminal" : tab;
+            const mapped = resolveMacroTab(tab);
             if (mapped !== activeTab) {
                 setActiveTab(mapped);
             }
@@ -564,15 +571,15 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                 </motion.div>
             )}
 
-            {/* TAB CONTENT: 2. Live Economic Calendar */}
-            {activeTab === "calendar" && (
+            {/* TAB CONTENT: 2. Pair Analysis Engine */}
+            {activeTab === "pairs" && (
                 <motion.div
-                    key="calendar"
+                    key="pairs"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                 >
-                    <EconomicCalendar />
+                    <MacroEngine mode="pairs" />
                 </motion.div>
             )}
 
@@ -584,7 +591,19 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                 >
-                    <MacroEngine />
+                    <MacroEngine mode="central_banks" />
+                </motion.div>
+            )}
+
+            {/* TAB CONTENT: 4. Live Economic Calendar */}
+            {activeTab === "calendar" && (
+                <motion.div
+                    key="calendar"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <EconomicCalendar />
                 </motion.div>
             )}
 
