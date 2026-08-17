@@ -135,7 +135,7 @@ export default function Sidebar() {
                                     PIPSTAB<span className="text-accent text-3xl">.</span>
                                 </span>
                                 <span className="px-1.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-mono font-black text-accent tracking-normal">
-                                    v2.4-beta
+                                    v2.4.0-beta
                                 </span>
                             </motion.div>
                         )}

@@ -75,7 +75,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                                 </div>
                                 <span className="text-lg font-black text-sidebar-foreground font-['Montserrat'] tracking-tighter">PIPSTAB<span className="text-accent">.</span></span>
                                 <span className="px-1.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-mono font-black text-accent">
-                                    v2.4-beta
+                                    v2.4.0-beta
                                 </span>
                             </Link>
                             <button
