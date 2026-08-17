@@ -88,7 +88,7 @@ async function resolvePastEventsActuals(events: EconomicCalendarEvent[]) {
     const pastEvents = events.filter((ev) => {
         const evDate = new Date(ev.time);
         const diffHours = (now.getTime() - evDate.getTime()) / (1000 * 60 * 60);
-        return evDate <= now && diffHours <= 48 && (ev.impact === "High" || ev.impact === "Medium") && !ev.actual;
+        return evDate <= now && diffHours <= 48 && !ev.actual;
     });
 
     if (pastEvents.length === 0) return;
@@ -106,8 +106,8 @@ async function resolvePastEventsActuals(events: EconomicCalendarEvent[]) {
 
     if (unCachedEvents.length === 0) return;
 
-    // Resolve up to 8 passed events with Gemini
-    const targetEvents = unCachedEvents.slice(0, 8);
+    // Resolve up to 30 passed events with Gemini
+    const targetEvents = unCachedEvents.slice(0, 30);
     const eventSummaries = targetEvents.map(e => ({
         id: e.id,
         event: e.event,
@@ -118,27 +118,27 @@ async function resolvePastEventsActuals(events: EconomicCalendarEvent[]) {
     }));
 
     try {
-        const prompt = `You are an institutional financial data provider. The following macroeconomic economic events were scheduled and have ALREADY passed their release time today/recently.
-Provide the exact official released 'actual' values for these economic prints.
+        const prompt = `You are an institutional macroeconomic data provider (Bloomberg Terminal / Refinitiv quality).
+The following economic calendar events have ALREADY passed their scheduled release time today or recently.
+Provide the official released 'actual' values for each event.
 
-Events:
+Events to populate:
 ${JSON.stringify(eventSummaries, null, 2)}
 
-Return a JSON array with:
+Return a JSON array where each object has "id" and the exact "actual" string (e.g. "0.5%", "2.0%", "1.9%", "2.7%", "40.83B", "20.6", "0.2%").
+Strict JSON format:
 [
   {
     "id": string,
-    "actual": string // e.g. "2.9%", "185K", "-15.2", "50.4"
+    "actual": string
   }
 ]
-Rules:
-1. Provide accurate or realistic actual numbers consistent with recent macroeconomic trends.
-2. Return ONLY raw JSON array.`;
+Return ONLY raw JSON.`;
 
         const res = await generateContentWithFallback({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             config: {
-                systemInstruction: "You are an economic calendar release feed. Return actual release numbers.",
+                systemInstruction: "You are an institutional economic release data feed. Return exact actual release numbers matching official statistical agency prints.",
                 responseMimeType: "application/json",
             }
         });
