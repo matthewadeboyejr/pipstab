@@ -421,36 +421,39 @@ function OverviewContent({
                         />
                     </div>
 
-                    {/* Interactive Cumulative Equity & Underwater Drawdown Chart */}
+                    {/* Interactive Cumulative Equity & Underwater Drawdown Curve */}
                     <CumulativeEquityChart trades={filteredTrades} />
 
-                    {/* Session Calendar & Alpha Leakage Speedometer */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    {/* Session Calendar (Left 2 cols) & Alpha Leakage + AI Insights (Right 1 col) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                         <div className="lg:col-span-2">
                             <SessionCalendar data={dynamicCalendarData} />
                         </div>
-                        <div>
+                        <div className="lg:col-span-1 flex flex-col gap-4">
                             <AlphaLeakageGauge
                                 score={Math.max(10, Math.min(90, Math.round(100 - parseFloat(stats.winRate) || 32)))}
                             />
+
+                            {/* AI Edge Insights neatly filling the vertical height */}
+                            <div className="flex-1 rounded-2xl bg-card border border-border/50 p-5 space-y-3 shadow-sm flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground font-mono flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-accent" />
+                                        AI Edge Insights
+                                    </h3>
+                                    <span className="text-[10px] text-muted-foreground font-mono">Live Pulse</span>
+                                </div>
+                                <div className="space-y-2.5">
+                                    {dynamicInsights.slice(0, 2).map((insight, i) => (
+                                        <InsightCard key={insight.id || i} insight={insight} index={i} />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* RECENT TRADES */}
                     <RecentTrades trades={filteredTrades.slice(0, 5)} />
-
-                    {/* Quick AI Insights */}
-                    <div>
-                        <div className="mb-3 mt-6">
-                            <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">AI Insights</h3>
-                            <p className="text-[11px] text-muted-foreground">Pattern recognition from your trading data</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {dynamicInsights.map((insight, i) => (
-                                <InsightCard key={insight.id || i} insight={insight} index={i} />
-                            ))}
-                        </div>
-                    </div>
                 </motion.div>
             )}
 
