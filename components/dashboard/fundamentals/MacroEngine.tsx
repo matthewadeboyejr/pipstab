@@ -36,6 +36,9 @@ import {
     MacroPreset,
 } from "@/lib/macro/centralBanks";
 
+import InstitutionalPressureRadar from "@/components/dashboard/fundamentals/InstitutionalPressureRadar";
+import MultiTimeframeFlowMatrix from "@/components/dashboard/fundamentals/MultiTimeframeFlowMatrix";
+
 // ─── Available Pairs & Supported Assets ────────────────────────
 const DEFAULT_PAIRS = [
     // Space & Tech Equities
@@ -98,6 +101,26 @@ export type AdvancedPairAnalysis = {
     macro_score: number;
     bias: "BUY" | "SELL" | "NEUTRAL";
     conviction: "High" | "Medium" | "Low";
+    tactical_headline?: string;
+    executive_summary?: string;
+    market_regimes?: {
+        trending: boolean;
+        vol_expansion: boolean;
+        range_bound: boolean;
+        regime_label: string;
+    };
+    intraday_flow?: {
+        flow_4h: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_1h: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_15m: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+    };
+    radar_pressure?: {
+        axes: Array<{
+            label: string;
+            score: number;
+            current_value: string;
+        }>;
+    };
     macro_snapshot: {
         risk_regime: string;
         usd_context: string;
@@ -701,65 +724,117 @@ This analysis is generated for educational, informational, and research purposes
                             transition={{ delay: i * 0.08 }}
                             className={`rounded-2xl bg-card border ${bc.border} shadow-xl overflow-hidden`}
                         >
-                            {/* Card Header */}
-                            <div className="px-6 py-4 border-b border-border/30 flex flex-wrap items-center justify-between gap-3 bg-white/[0.01]">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xl font-extrabold text-foreground font-mono tracking-tight">
-                                        {pair.symbol}
-                                    </span>
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold uppercase">
-                                        {pair.category}
-                                    </span>
-                                    <span
-                                        className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${convictionBadges[pair.conviction] || convictionBadges.Medium
-                                            }`}
-                                    >
-                                        {pair.conviction} Conviction
-                                    </span>
+                            {/* Card Header & Tactical Directive Banner */}
+                            <div className="p-6 border-b border-border/30 bg-gradient-to-b from-white/[0.02] to-transparent space-y-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl font-black text-foreground font-mono tracking-tight">
+                                            {pair.symbol}
+                                        </span>
+                                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold uppercase font-mono">
+                                            {pair.category}
+                                        </span>
+                                        <span
+                                            className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${convictionBadges[pair.conviction] || convictionBadges.Medium
+                                                }`}
+                                        >
+                                            {pair.conviction} Conviction
+                                        </span>
+                                        {pair.market_regimes?.regime_label && (
+                                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 font-mono hidden sm:inline-block">
+                                                {pair.market_regimes.regime_label}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        {/* Macro Score Pill */}
+                                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-border/40">
+                                            <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono">
+                                                Macro Score
+                                            </span>
+                                            <span className="text-base font-black text-foreground font-['Montserrat']">
+                                                {pair.macro_score}
+                                                <span className="text-[10px] text-muted-foreground font-normal">/100</span>
+                                            </span>
+                                        </div>
+
+                                        {/* Bias Badge */}
+                                        <div
+                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-xl ${bc.bg} ${bc.text} text-sm font-extrabold font-['Montserrat'] border ${bc.border}`}
+                                        >
+                                            {pair.bias === "BUY" ? (
+                                                <TrendingUp className="w-4 h-4" />
+                                            ) : pair.bias === "SELL" ? (
+                                                <TrendingDown className="w-4 h-4" />
+                                            ) : (
+                                                <Minus className="w-4 h-4" />
+                                            )}
+                                            {pair.bias}
+                                        </div>
+
+                                        {/* Copy Brief Button */}
+                                        <button
+                                            onClick={() => copyInstitutionalBrief(pair)}
+                                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all border border-border/40"
+                                            title="Copy Institutional Macro Brief"
+                                        >
+                                            {isCopied ? (
+                                                <Check className="w-4 h-4 text-emerald-400" />
+                                            ) : (
+                                                <Copy className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    {/* Macro Score Pill */}
-                                    <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-border/40">
-                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">
-                                            Macro Score
-                                        </span>
-                                        <span className="text-sm font-extrabold text-foreground font-['Montserrat']">
-                                            {pair.macro_score}
-                                            <span className="text-[10px] text-muted-foreground font-normal">/100</span>
-                                        </span>
+                                {/* Punchy Executive Directive Headline */}
+                                <div className="p-4 rounded-xl bg-white/[0.02] border border-border/40 space-y-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4 text-accent shrink-0" />
+                                        <h3 className="text-sm sm:text-base font-extrabold text-foreground font-['Montserrat'] tracking-tight">
+                                            {pair.tactical_headline || (pair.bias === "BUY" ? "Lean long on structure — but size for volatility" : pair.bias === "SELL" ? "Fade rallies into macro resistance" : "Maintain neutral posture — await expansion")}
+                                        </h3>
                                     </div>
-
-                                    {/* Bias Badge */}
-                                    <div
-                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-xl ${bc.bg} ${bc.text} text-sm font-extrabold font-['Montserrat'] border ${bc.border}`}
-                                    >
-                                        {pair.bias === "BUY" ? (
-                                            <TrendingUp className="w-4 h-4" />
-                                        ) : pair.bias === "SELL" ? (
-                                            <TrendingDown className="w-4 h-4" />
-                                        ) : (
-                                            <Minus className="w-4 h-4" />
-                                        )}
-                                        {pair.bias}
-                                    </div>
-
-                                    {/* Copy Brief Button */}
-                                    <button
-                                        onClick={() => copyInstitutionalBrief(pair)}
-                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all border border-border/40"
-                                        title="Copy Institutional Macro Brief"
-                                    >
-                                        {isCopied ? (
-                                            <Check className="w-4 h-4 text-emerald-400" />
-                                        ) : (
-                                            <Copy className="w-4 h-4" />
-                                        )}
-                                    </button>
+                                    <p className="text-xs text-muted-foreground leading-relaxed pl-6">
+                                        {pair.executive_summary || pair.institutional_brief}
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="p-6 space-y-6">
+                                {/* TWO-COLUMN INSTITUTIONAL TERMINAL: Flow Matrix + Pressure Radar */}
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                                    {/* Left: Multi-Timeframe Intraday Flow (7 Cols) */}
+                                    <div className="lg:col-span-7">
+                                        <MultiTimeframeFlowMatrix
+                                            symbol={pair.symbol}
+                                            flow_4h={pair.intraday_flow?.flow_4h}
+                                            flow_1h={pair.intraday_flow?.flow_1h}
+                                            flow_15m={pair.intraday_flow?.flow_15m}
+                                            market_regimes={pair.market_regimes}
+                                            bias={pair.bias}
+                                        />
+                                    </div>
+
+                                    {/* Right: Institutional Pressure Radar Spider Chart (5 Cols) */}
+                                    <div className="lg:col-span-5 p-4 rounded-2xl bg-white/[0.015] border border-border/40 flex flex-col items-center justify-center space-y-2">
+                                        <div className="w-full flex items-center justify-between px-2 text-xs">
+                                            <span className="font-bold text-foreground font-mono flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                {pair.symbol} PRESSURE RADAR
+                                            </span>
+                                            <span className="text-[10px] font-bold text-accent font-mono">LIVE MATRIX</span>
+                                        </div>
+                                        <InstitutionalPressureRadar
+                                            axes={pair.radar_pressure?.axes || []}
+                                            score={pair.macro_score}
+                                            bias={pair.bias}
+                                            symbol={pair.symbol}
+                                        />
+                                    </div>
+                                </div>
+
                                 {/* 4 Macro Context Tiles */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                     <div className="p-4 rounded-xl bg-white/[0.02] border border-border/20 space-y-1">
