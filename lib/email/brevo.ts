@@ -133,6 +133,89 @@ export async function sendEarlyAccessInviteEmail({
   }
 }
 
+export async function sendWaitlistConfirmationEmail({
+  email,
+  fullName,
+}: {
+  email: string;
+  fullName: string;
+}): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || "hello@pipstab.com";
+  const senderName = process.env.BREVO_SENDER_NAME || "PipTab Team";
+
+  if (!apiKey) {
+    return { success: false, error: "BREVO_API_KEY not configured" };
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're on the PipTab Waitlist</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070A0F; color: #E5E7EB; margin: 0; padding: 0; }
+    .container { max-width: 580px; margin: 0 auto; padding: 40px 20px; }
+    .card { background-color: #0E131F; border: 1px solid #1E293B; border-radius: 16px; padding: 36px 30px; }
+    .badge { display: inline-block; background-color: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 20px; }
+    h1 { color: #FFFFFF; font-size: 22px; font-weight: 800; margin-top: 0; line-height: 1.3; }
+    p { color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 16px 0; }
+    .footer { color: #64748B; font-size: 11px; text-align: center; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">⏳ Waitlist Confirmed</span>
+      <h1>We've Received Your Early Access Request, ${fullName}!</h1>
+      <p>
+        Thank you for your interest in <strong>PipTab Institutional Trading Analytics</strong>. You have been placed in our private beta queue.
+      </p>
+      <p>
+        We are onboarding traders in structured cohorts to ensure high-touch feedback. As soon as your access slot opens up, you will receive an invitation email with direct access to create your account.
+      </p>
+      <p style="font-size: 12px; color: #64748B;">
+        In the meantime, feel free to follow our updates and prepare your trading playbook.
+      </p>
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} PipTab Analytics. Built for disciplined, data-driven traders.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email, name: fullName }],
+        subject: "You're on the PipTab Early Access Waitlist ⏳",
+        htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      return { success: false, error: errData.message || response.statusText };
+    }
+
+    const data = await response.json();
+    return { success: true, messageId: data.messageId };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
 export interface BroadcastEmailParams {
   recipients: Array<{ email: string; name?: string }>;
   subject: string;

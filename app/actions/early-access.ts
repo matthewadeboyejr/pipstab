@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-
 import { logger } from "@/lib/logger";
+import { sendWaitlistConfirmationEmail } from "@/lib/email/brevo";
 
 export async function submitEarlyAccess(formData: {
     full_name: string;
@@ -33,6 +33,16 @@ export async function submitEarlyAccess(formData: {
         
         // Return specific error message for debugging
         return { success: false, error: error.message || 'Something went wrong. Please try again.' };
+    }
+
+    // Dispatch automated waitlist confirmation email via Brevo
+    try {
+        await sendWaitlistConfirmationEmail({
+            email: formData.email,
+            fullName: formData.full_name,
+        });
+    } catch (emailErr) {
+        console.warn("Could not dispatch waitlist confirmation email:", emailErr);
     }
 
     await logger.info("New Early Access Signup", `${formData.full_name} (${formData.email}) joined the ${formData.market} waitlist.`, { market: formData.market });
