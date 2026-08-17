@@ -25,6 +25,7 @@ import {
     Sparkles,
     BarChart3,
     ChevronUp,
+    Plus,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import {
@@ -35,25 +36,60 @@ import {
     MacroPreset,
 } from "@/lib/macro/centralBanks";
 
-// ─── Available Pairs ────────────────────────────────────────
-const allPairs = [
-    { symbol: "EURUSD", category: "FX" },
-    { symbol: "GBPUSD", category: "FX" },
-    { symbol: "USDJPY", category: "FX" },
-    { symbol: "USDCAD", category: "FX" },
-    { symbol: "AUDUSD", category: "FX" },
-    { symbol: "NZDUSD", category: "FX" },
-    { symbol: "EURGBP", category: "FX" },
-    { symbol: "GBPJPY", category: "FX" },
-    { symbol: "AUDJPY", category: "FX" },
-    { symbol: "USDCHF", category: "FX" },
-    { symbol: "XAUUSD", category: "Metals" },
-    { symbol: "XAGUSD", category: "Metals" },
-    { symbol: "SPX500", category: "Indices" },
-    { symbol: "NAS100", category: "Indices" },
-    { symbol: "US30", category: "Indices" },
-    { symbol: "BTCUSD", category: "Crypto" },
-    { symbol: "ETHUSD", category: "Crypto" },
+// ─── Available Pairs & Supported Assets ────────────────────────
+const DEFAULT_PAIRS = [
+    // Space & Tech Equities
+    { symbol: "SPCX", name: "SpaceX / Space Exploration Index", category: "Space & Equities" },
+    { symbol: "TSLA", name: "Tesla Inc.", category: "Equities" },
+    { symbol: "NVDA", name: "Nvidia Corp.", category: "Equities" },
+    { symbol: "AAPL", name: "Apple Inc.", category: "Equities" },
+    { symbol: "PLTR", name: "Palantir Technologies", category: "Equities" },
+    { symbol: "AMZN", name: "Amazon.com Inc.", category: "Equities" },
+    { symbol: "MSFT", name: "Microsoft Corp.", category: "Equities" },
+    { symbol: "META", name: "Meta Platforms", category: "Equities" },
+
+    // Indices
+    { symbol: "SPX500", name: "S&P 500 Index", category: "Indices" },
+    { symbol: "NAS100", name: "Nasdaq 100 Index", category: "Indices" },
+    { symbol: "US30", name: "Dow Jones Industrial", category: "Indices" },
+    { symbol: "GER40", name: "DAX 40 Index", category: "Indices" },
+    { symbol: "UK100", name: "FTSE 100 Index", category: "Indices" },
+    { symbol: "JPN225", name: "Nikkei 225 Index", category: "Indices" },
+
+    // Deriv Synthetics
+    { symbol: "VOL75", name: "Volatility 75 Index", category: "Synthetics" },
+    { symbol: "VOL100", name: "Volatility 100 Index", category: "Synthetics" },
+    { symbol: "CRASH1000", name: "Crash 1000 Index", category: "Synthetics" },
+    { symbol: "BOOM1000", name: "Boom 1000 Index", category: "Synthetics" },
+
+    // Forex Majors & Crosses
+    { symbol: "EURUSD", name: "Euro / US Dollar", category: "FX Majors" },
+    { symbol: "GBPUSD", name: "British Pound / US Dollar", category: "FX Majors" },
+    { symbol: "USDJPY", name: "US Dollar / Japanese Yen", category: "FX Majors" },
+    { symbol: "USDCAD", name: "US Dollar / Canadian Dollar", category: "FX Majors" },
+    { symbol: "AUDUSD", name: "Australian Dollar / US Dollar", category: "FX Majors" },
+    { symbol: "NZDUSD", name: "New Zealand Dollar / US Dollar", category: "FX Majors" },
+    { symbol: "USDCHF", name: "US Dollar / Swiss Franc", category: "FX Majors" },
+    { symbol: "EURGBP", name: "Euro / British Pound", category: "FX Crosses" },
+    { symbol: "GBPJPY", name: "British Pound / Japanese Yen", category: "FX Crosses" },
+    { symbol: "AUDJPY", name: "Australian Dollar / Japanese Yen", category: "FX Crosses" },
+    { symbol: "EURJPY", name: "Euro / Japanese Yen", category: "FX Crosses" },
+    { symbol: "GBPAUD", name: "British Pound / Australian Dollar", category: "FX Crosses" },
+    { symbol: "USDMXN", name: "US Dollar / Mexican Peso", category: "Exotics" },
+    { symbol: "USDZAR", name: "US Dollar / South African Rand", category: "Exotics" },
+
+    // Commodities & Metals
+    { symbol: "XAUUSD", name: "Gold / US Dollar", category: "Metals" },
+    { symbol: "XAGUSD", name: "Silver / US Dollar", category: "Metals" },
+    { symbol: "USOIL", name: "WTI Crude Oil", category: "Commodities" },
+    { symbol: "UKOIL", name: "Brent Crude Oil", category: "Commodities" },
+    { symbol: "NATGAS", name: "Natural Gas", category: "Commodities" },
+
+    // Crypto
+    { symbol: "BTCUSD", name: "Bitcoin / USD", category: "Crypto" },
+    { symbol: "ETHUSD", name: "Ethereum / USD", category: "Crypto" },
+    { symbol: "SOLUSD", name: "Solana / USD", category: "Crypto" },
+    { symbol: "XRPUSD", name: "XRP / USD", category: "Crypto" },
 ];
 
 export type AdvancedPairAnalysis = {
@@ -122,6 +158,7 @@ export default function MacroEngine({ mode = "all" }: MacroEngineProps) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [showCentralBanks, setShowCentralBanks] = useState(true);
     const [search, setSearch] = useState("");
+    const [customPairs, setCustomPairs] = useState<Array<{ symbol: string; name?: string; category: string }>>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState<{ current: number; total: number; currentSymbol: string }>({
         current: 0,
@@ -132,6 +169,8 @@ export default function MacroEngine({ mode = "all" }: MacroEngineProps) {
     const [copiedSymbol, setCopiedSymbol] = useState<string | null>(null);
     const { addToast } = useToast();
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const allPairs = [...DEFAULT_PAIRS, ...customPairs];
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -144,9 +183,37 @@ export default function MacroEngine({ mode = "all" }: MacroEngineProps) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const cleanSearchSymbol = search.trim().toUpperCase().replace(/[^A-Z0-9/]/g, "");
+
     const filteredPairs = allPairs.filter(
-        (p) => p.symbol.toLowerCase().includes(search.toLowerCase()) && !selectedPairs.includes(p.symbol)
+        (p) =>
+            (p.symbol.toLowerCase().includes(search.toLowerCase()) ||
+                (p.name && p.name.toLowerCase().includes(search.toLowerCase())) ||
+                p.category.toLowerCase().includes(search.toLowerCase())) &&
+            !selectedPairs.includes(p.symbol)
     );
+
+    const addCustomPair = (symbolToAdd: string) => {
+        const clean = symbolToAdd.trim().toUpperCase().replace(/[^A-Z0-9/]/g, "");
+        if (!clean) return;
+
+        if (!allPairs.some((p) => p.symbol === clean)) {
+            let autoCategory = "Custom Asset";
+            if (clean.includes("USD") || clean.length === 6) autoCategory = "FX / Commodity";
+            if (["TSLA", "NVDA", "AAPL", "PLTR", "SPCX", "SPACEX"].includes(clean)) autoCategory = "Equities";
+            if (clean.startsWith("VOL") || clean.startsWith("CRASH") || clean.startsWith("BOOM")) autoCategory = "Synthetics";
+
+            setCustomPairs((prev) => [...prev, { symbol: clean, category: autoCategory }]);
+        }
+
+        if (!selectedPairs.includes(clean)) {
+            setSelectedPairs((prev) => [...prev, clean]);
+            setActivePreset("custom");
+            addToast(`Added ${clean} to analysis list`, "success");
+        }
+        setSearch("");
+        setDropdownOpen(false);
+    };
 
     const togglePair = (symbol: string) => {
         setSelectedPairs((prev) =>
@@ -514,7 +581,7 @@ This analysis is generated for educational, informational, and research purposes
                                     initial={{ opacity: 0, y: -6 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -6 }}
-                                    className="absolute top-full left-0 mt-2 w-64 rounded-2xl bg-card border border-border/50 shadow-2xl z-30 overflow-hidden p-2 space-y-1.5"
+                                    className="absolute top-full left-0 mt-2 w-72 rounded-2xl bg-card border border-border/50 shadow-2xl z-30 overflow-hidden p-2 space-y-1.5"
                                 >
                                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-border/30">
                                         <Search className="w-3.5 h-3.5 text-muted-foreground" />
@@ -522,12 +589,35 @@ This analysis is generated for educational, informational, and research purposes
                                             type="text"
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
-                                            placeholder="Search pairs..."
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && cleanSearchSymbol) {
+                                                    e.preventDefault();
+                                                    addCustomPair(cleanSearchSymbol);
+                                                }
+                                            }}
+                                            placeholder="Search or enter symbol (e.g. SPCX)..."
                                             className="bg-transparent text-xs text-foreground outline-none w-full"
                                             autoFocus
                                         />
                                     </div>
-                                    <div className="max-h-52 overflow-y-auto pr-1 space-y-0.5">
+
+                                    {/* Direct Add Custom Asset Button */}
+                                    {cleanSearchSymbol && !selectedPairs.includes(cleanSearchSymbol) && (
+                                        <button
+                                            onClick={() => addCustomPair(cleanSearchSymbol)}
+                                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-accent bg-accent/10 hover:bg-accent/20 border border-accent/30 transition-all text-left group"
+                                        >
+                                            <span className="font-mono flex items-center gap-1.5">
+                                                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" />
+                                                <span>Add &quot;{cleanSearchSymbol}&quot;</span>
+                                            </span>
+                                            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-accent/20 text-accent font-bold">
+                                                Enter ↵
+                                            </span>
+                                        </button>
+                                    )}
+
+                                    <div className="max-h-56 overflow-y-auto pr-1 space-y-0.5">
                                         {filteredPairs.map((pair) => (
                                             <button
                                                 key={pair.symbol}
@@ -536,15 +626,22 @@ This analysis is generated for educational, informational, and research purposes
                                                     setDropdownOpen(false);
                                                     setSearch("");
                                                 }}
-                                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-foreground hover:bg-white/5 transition-colors"
+                                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-foreground hover:bg-white/5 transition-colors text-left"
                                             >
-                                                <span className="font-bold font-mono">{pair.symbol}</span>
-                                                <span className="text-[10px] text-muted-foreground font-semibold px-2 py-0.5 rounded bg-white/5">
+                                                <div>
+                                                    <div className="font-bold font-mono text-foreground">{pair.symbol}</div>
+                                                    {pair.name && (
+                                                        <div className="text-[10px] text-muted-foreground truncate max-w-[170px]">
+                                                            {pair.name}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="text-[9px] text-muted-foreground font-semibold px-2 py-0.5 rounded bg-white/5 whitespace-nowrap ml-2">
                                                     {pair.category}
                                                 </span>
                                             </button>
                                         ))}
-                                        {filteredPairs.length === 0 && (
+                                        {filteredPairs.length === 0 && !cleanSearchSymbol && (
                                             <p className="text-[11px] text-muted-foreground text-center py-3">
                                                 All matching pairs selected
                                             </p>

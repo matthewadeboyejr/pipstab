@@ -219,10 +219,22 @@ export const MACRO_PRESETS: MacroPreset[] = [
         pairs: ["XAUUSD", "XAGUSD", "SPX500", "NAS100", "US30"],
     },
     {
+        id: "space_tech",
+        label: "Space & Tech Equities",
+        description: "SpaceX, Tesla, Nvidia, Palantir, and hyper-growth tech assets",
+        pairs: ["SPCX", "TSLA", "NVDA", "AAPL", "PLTR"],
+    },
+    {
+        id: "synthetics",
+        label: "Deriv Synthetics",
+        description: "Volatility Indices, Crash & Boom algorithmic markets",
+        pairs: ["VOL75", "VOL100", "CRASH1000", "BOOM1000"],
+    },
+    {
         id: "crypto",
         label: "Crypto & Digital Assets",
         description: "High-beta macro liquidity & risk-sentiment proxies",
-        pairs: ["BTCUSD", "ETHUSD"],
+        pairs: ["BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD"],
     },
 ];
 
