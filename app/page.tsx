@@ -53,6 +53,14 @@ export default function Home() {
               <a href="/early-access" className="hover:text-foreground hover:text-accent transition-colors">
                 Early Access Beta
               </a>
+              <a
+                href="https://t.me/pipstab"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline flex items-center gap-1 font-bold"
+              >
+                Telegram: @pipstab
+              </a>
               <a href="/auth/sign-in" className="hover:text-foreground hover:text-accent transition-colors">
                 Log In
               </a>

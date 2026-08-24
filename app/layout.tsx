@@ -131,6 +131,7 @@ export default function RootLayout({
                 "url": "https://pipstab.com",
                 "logo": "https://pipstab.com/og-image.png",
                 "sameAs": [
+                  "https://t.me/pipstab",
                   "https://twitter.com/pipstab"
                 ]
               },

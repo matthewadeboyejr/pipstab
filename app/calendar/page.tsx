@@ -118,8 +118,19 @@ export default function CalendarPage() {
                             PIPSTAB<span className="text-accent">.</span>
                         </span>
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono">
-                        © 2026 PIPSTAB PERFORMANCE TRADING OS
+
+                    <div className="flex items-center gap-6 text-xs font-semibold text-muted-foreground font-['Montserrat']">
+                        <a
+                            href="https://t.me/pipstab"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent hover:underline flex items-center gap-1 font-bold"
+                        >
+                            Telegram: @pipstab
+                        </a>
+                        <span className="text-xs text-muted-foreground font-mono">
+                            © 2026 PIPSTAB
+                        </span>
                     </div>
                 </div>
             </footer>
