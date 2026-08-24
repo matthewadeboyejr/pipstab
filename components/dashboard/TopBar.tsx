@@ -2,10 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Search, Bell, Plus, Menu, Sun, Moon, Compass } from "lucide-react";
+import { Search, Bell, Plus, Menu, Sun, Moon, Compass, Brain } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
+import PreSessionMindsetModal from "@/components/dashboard/psychology/PreSessionMindsetModal";
 import { createClient } from "@/utils/supabase/client";
 import AccountSelector from "@/components/dashboard/AccountSelector";
 
@@ -90,6 +91,20 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                     />
                 </div>
 
+                {/* Mindset Psychology Ritual */}
+                <button
+                    onClick={() => {
+                        if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("open-mindset-ritual"));
+                        }
+                    }}
+                    className="p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                    title="Pre-Session Mindset Ritual & Audio Affirmations"
+                    aria-label="Pre-Session Mindset Ritual"
+                >
+                    <Brain className="w-5 h-5" />
+                </button>
+
                 {/* Product Tour Guide */}
                 <button
                     onClick={() => {
@@ -126,7 +141,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                                 key="moon"
                                 initial={{ rotate: 90, opacity: 0 }}
                                 animate={{ rotate: 0, opacity: 1 }}
-                                exit={{ rotate: -90, opacity: 0 }}
+                                exit={{ rotate: 90, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
                                 <Moon className="w-5 h-5" />
@@ -155,6 +170,9 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
             {/* Log Trade Modal */}
             <LogTradeModal open={tradeModalOpen} onClose={() => setTradeModalOpen(false)} />
+
+            {/* Pre-Session Mindset Ritual Modal */}
+            <PreSessionMindsetModal />
         </motion.header>
     );
 }

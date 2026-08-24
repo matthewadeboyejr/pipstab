@@ -25,6 +25,7 @@ import RecentTrades from "@/components/dashboard/RecentTrades";
 import CumulativeEquityChart from "@/components/dashboard/analytics/CumulativeEquityChart";
 import SessionEdgeMatrix from "@/components/dashboard/analytics/SessionEdgeMatrix";
 import AiEdgeDiagnosticModal from "@/components/dashboard/analytics/AiEdgeDiagnosticModal";
+import DailyMindsetWidget from "@/components/dashboard/psychology/DailyMindsetWidget";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -389,6 +390,9 @@ function OverviewContent({
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    {/* Daily Mindset & Psychology Axiom Widget */}
+                    <DailyMindsetWidget />
+
                     {/* KPI Strip */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatCard

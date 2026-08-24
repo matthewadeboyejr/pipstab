@@ -63,13 +63,26 @@ export default function TraderAxioms() {
                     </p>
                 </div>
 
-                <button
-                    onClick={() => setIsAdding(!isAdding)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-bold text-muted-foreground hover:text-foreground transition-all"
-                >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Axiom
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            if (typeof window !== "undefined") {
+                                window.dispatchEvent(new Event("open-mindset-ritual"));
+                            }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/30 text-xs font-bold text-accent hover:bg-accent/20 transition-all font-['Montserrat']"
+                    >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Audio Ritual & Pledges
+                    </button>
+                    <button
+                        onClick={() => setIsAdding(!isAdding)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-bold text-muted-foreground hover:text-foreground transition-all"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Axiom
+                    </button>
+                </div>
             </div>
 
             {/* Add Form */}

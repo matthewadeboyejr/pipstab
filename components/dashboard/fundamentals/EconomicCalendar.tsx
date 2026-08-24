@@ -220,11 +220,11 @@ export default function EconomicCalendar() {
 Timezone: ${activeTzLabel} (${activeTzAbbr}) | Filter: ${impactFilter === "HIGH" ? "High Impact Only" : "High & Medium"} | Currency: ${selectedCurrency}
 
 ${filteredEvents.slice(0, 15).map((ev) => {
-    const timeStr = formatTimeInTz(ev.time, selectedTimezone);
-    return `• [${ev.impact.toUpperCase()}] ${ev.country} - ${ev.event} (${timeStr} ${activeTzAbbr})
+            const timeStr = formatTimeInTz(ev.time, selectedTimezone);
+            return `• [${ev.impact.toUpperCase()}] ${ev.country} - ${ev.event} (${timeStr} ${activeTzAbbr})
   Consensus: ${ev.estimate} | Prior: ${ev.prev} | Actual: ${ev.actual || "Pending"}
   Affected Pairs: ${ev.affected_pairs?.join(", ") || "General"}`;
-}).join("\n\n")}
+        }).join("\n\n")}
 
 ⚠️ DISCLAIMER:
 Economic release projections and deviation guidelines are for educational and risk preparation purposes only.
@@ -366,11 +366,10 @@ Economic release projections and deviation guidelines are for educational and ri
                             <button
                                 key={btn.id}
                                 onClick={() => setImpactFilter(btn.id as any)}
-                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
-                                    impactFilter === btn.id
-                                        ? "bg-accent text-accent-foreground border-accent shadow-sm"
-                                        : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
-                                }`}
+                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${impactFilter === btn.id
+                                    ? "bg-accent text-accent-foreground border-accent shadow-sm"
+                                    : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
+                                    }`}
                             >
                                 {btn.label}
                             </button>
@@ -387,11 +386,10 @@ Economic release projections and deviation guidelines are for educational and ri
                             <button
                                 key={btn.id}
                                 onClick={() => setDateFilter(btn.id as any)}
-                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
-                                    dateFilter === btn.id
-                                        ? "bg-white/10 text-foreground border-border/60"
-                                        : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
-                                }`}
+                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${dateFilter === btn.id
+                                    ? "bg-white/10 text-foreground border-border/60"
+                                    : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
+                                    }`}
                             >
                                 {btn.label}
                             </button>
@@ -406,11 +404,10 @@ Economic release projections and deviation guidelines are for educational and ri
                         <button
                             key={curr}
                             onClick={() => setSelectedCurrency(curr)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all border ${
-                                selectedCurrency === curr
-                                    ? "bg-accent/20 text-accent border-accent/40"
-                                    : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
-                            }`}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all border ${selectedCurrency === curr
+                                ? "bg-accent/20 text-accent border-accent/40"
+                                : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
+                                }`}
                         >
                             {countryFlags[curr] ? `${countryFlags[curr]} ${curr}` : curr}
                         </button>
@@ -445,11 +442,10 @@ Economic release projections and deviation guidelines are for educational and ri
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: Math.min(i * 0.02, 0.2) }}
                                             onClick={() => setExpandedEvent(isExpanded ? null : eventKey)}
-                                            className={`cursor-pointer group rounded-2xl bg-card border ${
-                                                isExpanded
-                                                    ? "border-accent/40 bg-accent/[0.02]"
-                                                    : "border-border/30 hover:border-accent/30"
-                                            } p-4 transition-all shadow-sm`}
+                                            className={`cursor-pointer group rounded-2xl bg-card border ${isExpanded
+                                                ? "border-accent/40 bg-accent/[0.02]"
+                                                : "border-border/30 hover:border-accent/30"
+                                                } p-4 transition-all shadow-sm`}
                                         >
                                             <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3">
                                                 {/* Time & Country with Timezone Tag */}
@@ -604,16 +600,16 @@ Economic release projections and deviation guidelines are for educational and ri
                     </div>
                 ))}
 
-                {filteredEvents.length === 0 && !isLoading && (
-                    <div className="p-12 text-center rounded-2xl bg-card border border-border/30 space-y-2">
-                        <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mx-auto" />
-                        <p className="text-sm font-bold text-foreground">No events found</p>
-                        <p className="text-xs text-muted-foreground">
-                            Try adjusting your impact level or currency filter.
-                        </p>
-                    </div>
-                )}
-            </div>
+            {filteredEvents.length === 0 && !isLoading && (
+                <div className="p-12 text-center rounded-2xl bg-card border border-border/30 space-y-2">
+                    <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mx-auto" />
+                    <p className="text-sm font-bold text-foreground">No events found</p>
+                    <p className="text-xs text-muted-foreground">
+                        Try adjusting your impact level or currency filter.
+                    </p>
+                </div>
+            )}
         </div>
+        </div >
     );
 }

@@ -12,10 +12,10 @@ const PublicNav = () => {
   const { theme, toggleTheme } = useTheme();
 
   const tools = [
-    { href: "/coming-soon", label: "News & Calendar" },
-    { href: "/coming-soon", label: "Journal & Analysis" },
-    { href: "/coming-soon", label: "Ai Fundamentals" },
-    { href: "/coming-soon", label: "Forex Calculator" },
+    { href: "/calendar", label: "News & Calendar" },
+    { href: "/calculator", label: "Forex Calculator" },
+    { href: "/early-access", label: "Journal & Analysis" },
+    { href: "/early-access", label: "AI Fundamentals" },
   ];
 
   return (
