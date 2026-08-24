@@ -241,10 +241,20 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                 >
                     {/* Live Clock & Session Overlap Marquee */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-border/40">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Clock className="w-4 h-4 text-accent" />
-                            <span>Global Exchange Clock:</span>
-                            <span className="font-mono font-bold text-foreground text-sm">{sessionRadar.utcTimeString}</span>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                                <Clock className="w-4 h-4 text-accent" />
+                                <span>UTC:</span>
+                                <span className="font-mono font-bold text-foreground text-sm">{sessionRadar.utcTimeString.replace(" UTC", "")}</span>
+                            </div>
+                            <span className="text-border/60">|</span>
+                            <div className="flex items-center gap-1.5">
+                                <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Local:</span>
+                                <span className="font-mono font-bold text-foreground text-sm">
+                                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                                </span>
+                            </div>
                         </div>
 
                         {sessionRadar.activeOverlap ? (

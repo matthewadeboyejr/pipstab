@@ -21,10 +21,18 @@ import {
     ArrowDownRight,
     Shield,
     AlertTriangle,
+    Globe,
 } from "lucide-react";
 import { format, isToday, isTomorrow, parseISO, isValid, differenceInSeconds } from "date-fns";
 import { useToast } from "@/context/ToastContext";
 import { EconomicCalendarEvent } from "@/app/api/fundamentals/calendar/route";
+import {
+    POPULAR_TIMEZONES,
+    formatTimeInTz,
+    getDatePartInTz,
+    getShortTzAbbreviation,
+    getClientTimezone,
+} from "@/lib/macro/timezones";
 
 const CURRENCIES = ["ALL", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"];
 
@@ -46,9 +54,26 @@ export default function EconomicCalendar() {
     const [impactFilter, setImpactFilter] = useState<"ALL" | "HIGH" | "MED_HIGH">("MED_HIGH");
     const [selectedCurrency, setSelectedCurrency] = useState<string>("ALL");
     const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "TOMORROW">("ALL");
+    const [selectedTimezone, setSelectedTimezone] = useState<string>("LOCAL");
     const [copiedSchedule, setCopiedSchedule] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const { addToast } = useToast();
+
+    // Load saved timezone or default to LOCAL (user browser timezone)
+    useEffect(() => {
+        const savedTz = localStorage.getItem("piptab_macro_timezone");
+        if (savedTz) {
+            setSelectedTimezone(savedTz);
+        }
+    }, []);
+
+    const handleTimezoneChange = (tzId: string) => {
+        setSelectedTimezone(tzId);
+        localStorage.setItem("piptab_macro_timezone", tzId);
+        const tzObj = POPULAR_TIMEZONES.find((t) => t.id === tzId);
+        const name = tzObj?.label || tzId;
+        addToast(`Timezone switched to ${name}`, "success");
+    };
 
     // Clock ticker for live countdown
     useEffect(() => {
@@ -78,8 +103,26 @@ export default function EconomicCalendar() {
         fetchCalendar();
     }, []);
 
+    const activeTzLabel = useMemo(() => {
+        const tz = POPULAR_TIMEZONES.find((t) => t.id === selectedTimezone);
+        if (selectedTimezone === "LOCAL") {
+            const detected = getClientTimezone();
+            return `Local (${detected.split("/").pop()?.replace(/_/g, " ") || detected})`;
+        }
+        return tz?.city || tz?.label || selectedTimezone;
+    }, [selectedTimezone]);
+
+    const activeTzAbbr = useMemo(() => {
+        return getShortTzAbbreviation(selectedTimezone);
+    }, [selectedTimezone]);
+
     // Filtered events
     const filteredEvents = useMemo(() => {
+        const todayStr = getDatePartInTz(new Date().toISOString(), selectedTimezone);
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrowStr = getDatePartInTz(tomorrowDate.toISOString(), selectedTimezone);
+
         return events.filter((ev) => {
             // Impact filter
             if (impactFilter === "HIGH" && ev.impact !== "High") return false;
@@ -88,18 +131,16 @@ export default function EconomicCalendar() {
             // Currency filter
             if (selectedCurrency !== "ALL" && ev.country.toUpperCase() !== selectedCurrency) return false;
 
-            // Date filter
+            // Date filter based on selected timezone
             if (dateFilter !== "ALL") {
-                const d = parseISO(ev.time);
-                if (isValid(d)) {
-                    if (dateFilter === "TODAY" && !isToday(d)) return false;
-                    if (dateFilter === "TOMORROW" && !isTomorrow(d)) return false;
-                }
+                const evDateStr = getDatePartInTz(ev.time, selectedTimezone);
+                if (dateFilter === "TODAY" && evDateStr !== todayStr) return false;
+                if (dateFilter === "TOMORROW" && evDateStr !== tomorrowStr) return false;
             }
 
             return true;
         });
-    }, [events, impactFilter, selectedCurrency, dateFilter]);
+    }, [events, impactFilter, selectedCurrency, dateFilter, selectedTimezone]);
 
     // Next High-Impact Event
     const nextHighImpactEvent = useMemo(() => {
@@ -144,11 +185,20 @@ export default function EconomicCalendar() {
 
     const formatDateLabel = (dateStr: string) => {
         try {
-            const date = parseISO(dateStr);
-            if (!isValid(date)) return dateStr;
-            if (isToday(date)) return "Today";
-            if (isTomorrow(date)) return "Tomorrow";
-            return format(date, "EEEE, MMMM do");
+            const todayStr = getDatePartInTz(new Date().toISOString(), selectedTimezone);
+            const tomorrowDate = new Date();
+            tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+            const tomorrowStr = getDatePartInTz(tomorrowDate.toISOString(), selectedTimezone);
+
+            if (dateStr === todayStr) return "Today";
+            if (dateStr === tomorrowStr) return "Tomorrow";
+
+            const parts = dateStr.split("-");
+            if (parts.length === 3) {
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                return format(d, "EEEE, MMMM do");
+            }
+            return dateStr;
         } catch {
             return dateStr;
         }
@@ -156,23 +206,23 @@ export default function EconomicCalendar() {
 
     const groupedEvents = useMemo(() => {
         return filteredEvents.reduce((acc: Record<string, EconomicCalendarEvent[]>, event) => {
-            const datePart = event.time.includes("T") ? event.time.split("T")[0] : event.time.split(" ")[0];
+            const datePart = getDatePartInTz(event.time, selectedTimezone);
             if (!acc[datePart]) acc[datePart] = [];
             acc[datePart].push(event);
             return acc;
         }, {});
-    }, [filteredEvents]);
+    }, [filteredEvents, selectedTimezone]);
 
     const copyCalendarSchedule = () => {
         if (filteredEvents.length === 0) return;
-        const text = `📅 [PIPTAB INSTITUTIONAL ECONOMIC SCHEDULE]
+        const text = `📅 [PIPTAB INSTITUTIONAL ECONOMIC SCHEDULE - ${activeTzLabel.toUpperCase()}]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Filter: ${impactFilter === "HIGH" ? "High Impact Only" : "High & Medium"} | Currency: ${selectedCurrency}
+Timezone: ${activeTzLabel} (${activeTzAbbr}) | Filter: ${impactFilter === "HIGH" ? "High Impact Only" : "High & Medium"} | Currency: ${selectedCurrency}
 
 ${filteredEvents.slice(0, 15).map((ev) => {
-    const timeStr = ev.time.includes("T") ? format(parseISO(ev.time), "EEE, MMM d @ HH:mm") : ev.time;
-    return `• [${ev.impact.toUpperCase()}] ${ev.country} - ${ev.event} (${timeStr})
-  Consensus: ${ev.estimate} | Prior: ${ev.prev}
+    const timeStr = formatTimeInTz(ev.time, selectedTimezone);
+    return `• [${ev.impact.toUpperCase()}] ${ev.country} - ${ev.event} (${timeStr} ${activeTzAbbr})
+  Consensus: ${ev.estimate} | Prior: ${ev.prev} | Actual: ${ev.actual || "Pending"}
   Affected Pairs: ${ev.affected_pairs?.join(", ") || "General"}`;
 }).join("\n\n")}
 
@@ -188,7 +238,7 @@ Economic release projections and deviation guidelines are for educational and ri
 
     return (
         <div className="space-y-6">
-            {/* Header */}
+            {/* Header with Timezone Selector */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -201,7 +251,27 @@ Economic release projections and deviation guidelines are for educational and ri
                         Live high-impact releases, deviation reaction matrices, and consensus forecasts
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-2 flex-wrap">
+                    {/* Timezone Selector Dropdown */}
+                    <div className="relative flex items-center">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-semibold text-foreground hover:bg-white/10 transition-all cursor-pointer">
+                            <Globe className="w-3.5 h-3.5 text-accent" />
+                            <select
+                                value={selectedTimezone}
+                                onChange={(e) => handleTimezoneChange(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-foreground font-mono outline-none cursor-pointer appearance-none pr-4"
+                            >
+                                {POPULAR_TIMEZONES.map((tz) => (
+                                    <option key={tz.id} value={tz.id} className="bg-[#0E131F] text-foreground">
+                                        {tz.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="w-3 h-3 text-muted-foreground pointer-events-none -ml-3" />
+                        </div>
+                    </div>
+
                     <button
                         onClick={copyCalendarSchedule}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/40 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all"
@@ -218,32 +288,33 @@ Economic release projections and deviation guidelines are for educational and ri
                             </>
                         )}
                     </button>
+
                     <button
                         onClick={fetchCalendar}
                         disabled={isLoading}
-                        className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:brightness-110 transition-all font-['Montserrat']"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:brightness-110 shadow-sm transition-all font-['Montserrat'] disabled:opacity-50"
                     >
                         <RefreshCcw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                        {isLoading ? "Syncing..." : "Refresh Feed"}
+                        <span>Refresh Feed</span>
                     </button>
                 </div>
             </div>
 
-            {/* Next High-Impact Event Live Countdown Banner */}
+            {/* Next Major Catalyst Alert Card */}
             {nextHighImpactEvent && (
                 <motion.div
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-5 rounded-2xl bg-gradient-to-r from-red-500/10 via-card to-card border border-red-500/20 shadow-md space-y-3"
+                    className="p-5 rounded-2xl bg-gradient-to-r from-red-500/10 via-card to-card border border-red-500/30 shadow-md space-y-3 relative overflow-hidden"
                 >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                                <Flame className="w-4 h-4 text-red-400 animate-pulse" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                                <Flame className="w-5 h-5 text-red-400 animate-pulse" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
+                                    <span className="text-[10px] font-extrabold uppercase font-mono tracking-wider px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                                         Next High-Impact Event
                                     </span>
                                     <span className="text-xs font-bold text-foreground">
@@ -269,6 +340,7 @@ Economic release projections and deviation guidelines are for educational and ri
                         <div className="flex items-center gap-4 text-muted-foreground font-mono text-[11px]">
                             <span>Consensus: <strong className="text-foreground">{nextHighImpactEvent.estimate}</strong></span>
                             <span>Prior: <strong className="text-foreground">{nextHighImpactEvent.prev}</strong></span>
+                            <span>Time: <strong className="text-accent">{formatTimeInTz(nextHighImpactEvent.time, selectedTimezone)} {activeTzAbbr}</strong></span>
                         </div>
                         <div className="text-[11px] text-muted-foreground/90 max-w-xl">
                             <span className="text-accent font-semibold">Deviation Rule: </span>
@@ -364,9 +436,7 @@ Economic release projections and deviation guidelines are for educational and ri
                             {dayEvents.map((event, i) => {
                                 const eventKey = `${date}-${event.id || i}`;
                                 const isExpanded = expandedEvent === eventKey;
-                                const evTimeFormatted = event.time.includes("T")
-                                    ? format(parseISO(event.time), "HH:mm")
-                                    : event.time.split(" ")[1] || event.time;
+                                const evTimeFormatted = formatTimeInTz(event.time, selectedTimezone);
 
                                 return (
                                     <div key={eventKey} className="space-y-1">
@@ -382,16 +452,21 @@ Economic release projections and deviation guidelines are for educational and ri
                                             } p-4 transition-all shadow-sm`}
                                         >
                                             <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3">
-                                                {/* Time & Country */}
+                                                {/* Time & Country with Timezone Tag */}
                                                 <div className="md:col-span-2 flex items-center gap-2.5">
                                                     <span className="text-lg">
                                                         {countryFlags[event.country] || "🌐"}
                                                     </span>
                                                     <div>
-                                                        <span className="text-xs font-bold text-foreground font-mono">
-                                                            {evTimeFormatted}
-                                                        </span>
-                                                        <span className="text-[10px] text-muted-foreground font-bold ml-1.5">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-xs font-bold text-foreground font-mono">
+                                                                {evTimeFormatted}
+                                                            </span>
+                                                            <span className="text-[9px] font-mono text-muted-foreground/80">
+                                                                {activeTzAbbr}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] text-muted-foreground font-bold">
                                                             {event.country}
                                                         </span>
                                                     </div>
@@ -456,61 +531,68 @@ Economic release projections and deviation guidelines are for educational and ri
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: "auto", opacity: 1 }}
                                                         exit={{ height: 0, opacity: 0 }}
-                                                        className="overflow-hidden"
+                                                        transition={{ duration: 0.2 }}
+                                                        className="mt-4 pt-4 border-t border-border/30 space-y-4 overflow-hidden"
                                                     >
-                                                        <div className="mt-4 pt-4 border-t border-border/20 space-y-3">
-                                                            {/* Commentary */}
-                                                            <div className="flex items-start gap-2.5 bg-white/[0.02] rounded-xl p-3.5 border border-border/20 text-xs">
-                                                                <ShieldAlert className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                                                                <div>
-                                                                    <p className="text-[10px] font-bold text-accent uppercase tracking-wider mb-0.5">
-                                                                        Institutional Context
-                                                                    </p>
-                                                                    <p className="text-foreground/90 leading-relaxed">
-                                                                        {event.commentary}
-                                                                    </p>
-                                                                </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            {/* Commentary & Overview */}
+                                                            <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.015] border border-border/20">
+                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono flex items-center gap-1.5">
+                                                                    <Info className="w-3.5 h-3.5 text-accent" /> Institutional Overview
+                                                                </span>
+                                                                <p className="text-xs text-foreground/90 leading-relaxed">
+                                                                    {event.commentary}
+                                                                </p>
                                                             </div>
 
-                                                            {/* Deviation Playbook Reaction Matrix */}
-                                                            {event.deviation_playbook && (
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                                                                    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-xs space-y-1">
-                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase flex items-center gap-1">
-                                                                            <ArrowUpRight className="w-3 h-3" /> If Actual Beats Consensus:
-                                                                        </span>
-                                                                        <p className="text-foreground/90 leading-relaxed">
-                                                                            {event.deviation_playbook.beat_consensus}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20 text-xs space-y-1">
-                                                                        <span className="text-[10px] font-bold text-red-400 uppercase flex items-center gap-1">
-                                                                            <ArrowDownRight className="w-3 h-3" /> If Actual Misses Consensus:
-                                                                        </span>
-                                                                        <p className="text-foreground/90 leading-relaxed">
-                                                                            {event.deviation_playbook.miss_consensus}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Correlated Assets */}
-                                                            {event.affected_pairs && (
-                                                                <div className="flex items-center gap-2 pt-1 flex-wrap">
-                                                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">
-                                                                        Correlated Assets:
-                                                                    </span>
-                                                                    {event.affected_pairs.map((pair) => (
+                                                            {/* Affected Currency Pairs & Assets */}
+                                                            <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.015] border border-border/20">
+                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono flex items-center gap-1.5">
+                                                                    <Target className="w-3.5 h-3.5 text-accent" /> High-Beta Correlated Assets
+                                                                </span>
+                                                                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                                                    {event.affected_pairs?.map((pair) => (
                                                                         <span
                                                                             key={pair}
-                                                                            className="text-[10px] px-2 py-0.5 rounded-md bg-white/5 text-foreground/80 font-mono font-semibold"
+                                                                            className="px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-accent font-mono font-bold text-[10px]"
                                                                         >
                                                                             {pair}
                                                                         </span>
                                                                     ))}
                                                                 </div>
-                                                            )}
+                                                            </div>
                                                         </div>
+
+                                                        {/* Deviation Reaction Playbook */}
+                                                        {event.deviation_playbook && (
+                                                            <div className="p-4 rounded-xl bg-black/40 border border-border/40 space-y-3">
+                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono flex items-center gap-1.5">
+                                                                    <Shield className="w-3.5 h-3.5 text-accent" /> Algorithmic Deviation Playbook
+                                                                </span>
+
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                    <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                                                                        <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                                                                            <ArrowUpRight className="w-3.5 h-3.5" />
+                                                                            <span>Beat Consensus (+Deviation)</span>
+                                                                        </div>
+                                                                        <p className="text-xs text-foreground/80 leading-relaxed">
+                                                                            {event.deviation_playbook.beat_consensus}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20 space-y-1">
+                                                                        <div className="flex items-center gap-1.5 text-red-400 font-bold text-[11px]">
+                                                                            <ArrowDownRight className="w-3.5 h-3.5" />
+                                                                            <span>Miss Consensus (-Deviation)</span>
+                                                                        </div>
+                                                                        <p className="text-xs text-foreground/80 leading-relaxed">
+                                                                            {event.deviation_playbook.miss_consensus}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
@@ -521,25 +603,16 @@ Economic release projections and deviation guidelines are for educational and ri
                         </div>
                     </div>
                 ))}
-            </div>
 
-            {filteredEvents.length === 0 && !isLoading && (
-                <div className="py-20 text-center bg-card border border-dashed border-border/30 rounded-2xl space-y-2">
-                    <CalendarIcon className="w-12 h-12 text-muted-foreground/20 mx-auto" />
-                    <p className="text-sm font-bold text-foreground font-['Montserrat']">No economic events found</p>
-                    <p className="text-xs text-muted-foreground">Try adjusting your impact, currency, or date filters above.</p>
-                </div>
-            )}
-
-            {/* Regulatory Disclaimer */}
-            <div className="p-4 rounded-2xl bg-white/[0.015] border border-border/30 text-center space-y-1.5">
-                <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-muted-foreground">
-                    <Shield className="w-3.5 h-3.5 text-accent" />
-                    <span>Economic Calendar & Deviation Disclaimer</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground/70 max-w-2xl mx-auto leading-relaxed">
-                    Times, forecasts, and deviation rules are compiled from institutional feeds for risk preparation and trade planning. Unforeseen data revisions and slippage may occur during high-impact market releases.
-                </p>
+                {filteredEvents.length === 0 && !isLoading && (
+                    <div className="p-12 text-center rounded-2xl bg-card border border-border/30 space-y-2">
+                        <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mx-auto" />
+                        <p className="text-sm font-bold text-foreground">No events found</p>
+                        <p className="text-xs text-muted-foreground">
+                            Try adjusting your impact level or currency filter.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
