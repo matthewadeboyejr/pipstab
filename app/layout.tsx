@@ -111,28 +111,90 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Structured Data: WebSite, Organization & SiteNavigationElement for Google Sitelinks */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": "PipTab",
-              "applicationCategory": "FinanceApplication",
-              "operatingSystem": "Web, iOS, Android",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "PipTab",
+                "alternateName": ["PIPSTAB", "PipTab Analytics", "PipTab Trading OS"],
+                "url": "https://pipstab.com",
+                "description": "The cognitive operating system and institutional journal for disciplined traders."
               },
-              "description": "Cognitive operating system and institutional trading journal for forex, crypto, and futures traders.",
-              "url": "https://pipstab.com",
-              "publisher": {
+              {
+                "@context": "https://schema.org",
                 "@type": "Organization",
                 "name": "PipTab Analytics",
-                "url": "https://pipstab.com"
+                "url": "https://pipstab.com",
+                "logo": "https://pipstab.com/og-image.png",
+                "sameAs": [
+                  "https://twitter.com/pipstab"
+                ]
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "itemListElement": [
+                  {
+                    "@type": "SiteNavigationElement",
+                    "position": 1,
+                    "name": "Forex & Position Size Calculator",
+                    "description": "Calculate exact lot sizes, pip values, margin requirements, and risk-reward targets.",
+                    "url": "https://pipstab.com/calculator"
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    "position": 2,
+                    "name": "Live Economic Calendar",
+                    "description": "Real-time macroeconomic releases, consensus forecasts, and algorithmic deviation playbooks.",
+                    "url": "https://pipstab.com/calendar"
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    "position": 3,
+                    "name": "Early Access Beta",
+                    "description": "Join the inner circle and be the first to experience the PipTab cognitive trading journal.",
+                    "url": "https://pipstab.com/early-access"
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    "position": 4,
+                    "name": "Top-Down Market Outlooks",
+                    "description": "Institutional strategy dossiers, multi-timeframe bias, and market structure analysis.",
+                    "url": "https://pipstab.com/outlooks"
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    "position": 5,
+                    "name": "Trader Sign In",
+                    "description": "Access your PipTab performance dashboard, journal entries, and AI diagnostics.",
+                    "url": "https://pipstab.com/auth/sign-in"
+                  }
+                ]
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                "name": "PipTab",
+                "applicationCategory": "FinanceApplication",
+                "operatingSystem": "Web, iOS, Android",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD"
+                },
+                "description": "Cognitive operating system and institutional trading journal for forex, crypto, and futures traders.",
+                "url": "https://pipstab.com",
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "PipTab Analytics",
+                  "url": "https://pipstab.com"
+                }
               }
-            }),
+            ]),
           }}
         />
       </head>

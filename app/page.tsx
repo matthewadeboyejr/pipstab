@@ -27,6 +27,38 @@ export default function Home() {
           <PublicNav />
         </div>
         <Hero />
+
+        {/* Public Homepage Footer with Structured Internal Sitelinks */}
+        <footer className="py-12 border-t border-border/40 bg-card/30 mt-12">
+          <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold tracking-tight text-base font-['Montserrat']">
+                PIPSTAB<span className="text-accent">.</span>
+              </span>
+              <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
+                Cognitive Operating System for Disciplined Traders
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-muted-foreground font-['Montserrat']">
+              <a href="/calculator" className="hover:text-foreground hover:text-accent transition-colors">
+                Forex Calculator
+              </a>
+              <a href="/calendar" className="hover:text-foreground hover:text-accent transition-colors">
+                Economic Calendar
+              </a>
+              <a href="/outlooks" className="hover:text-foreground hover:text-accent transition-colors">
+                Market Outlooks
+              </a>
+              <a href="/early-access" className="hover:text-foreground hover:text-accent transition-colors">
+                Early Access Beta
+              </a>
+              <a href="/auth/sign-in" className="hover:text-foreground hover:text-accent transition-colors">
+                Log In
+              </a>
+            </div>
+          </div>
+        </footer>
       </section>
     </>
   );
