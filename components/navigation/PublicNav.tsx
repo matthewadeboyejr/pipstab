@@ -24,11 +24,11 @@ const PublicNav = () => {
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-5xl mx-auto"
+        className="relative w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6"
       >
-        <div className="flex items-center justify-between h-14 px-5 md:px-6 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.06] rounded-none md:rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+        <div className="flex items-center justify-between h-14 px-4 sm:px-5 md:px-6 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.06] rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
               <Zap className="w-4 h-4 text-accent-foreground" />
             </div>
@@ -37,8 +37,8 @@ const PublicNav = () => {
             </span>
           </Link>
 
-          {/* Center — Quick Tools */}
-          <div className="hidden lg:flex items-center">
+          {/* Center — Quick Tools (Shows when space is available on desktop) */}
+          <div className="hidden xl:flex items-center">
             <div className="flex items-center bg-white/[0.03] rounded-xl px-1 py-1 border border-white/[0.04]">
               {tools.map((tool) => (
                 <Link
@@ -53,12 +53,12 @@ const PublicNav = () => {
           </div>
 
           {/* Right — Auth + Theme + Telegram */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-2.5 shrink-0">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
             <a
               href="https://t.me/pipstab"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-[#229ED9] hover:bg-white/5 transition-all font-['Montserrat'] whitespace-nowrap shrink-0"
+              className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-[#229ED9] hover:bg-white/5 transition-all font-['Montserrat'] whitespace-nowrap shrink-0"
               title="Join PipTab Telegram Community"
             >
               <svg className="w-4 h-4 fill-current text-[#229ED9]" viewBox="0 0 24 24">
@@ -86,13 +86,13 @@ const PublicNav = () => {
             </button>
             <Link
               href="/auth/sign-in"
-              className="px-3 lg:px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-['Montserrat'] whitespace-nowrap shrink-0"
+              className="px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-['Montserrat'] whitespace-nowrap shrink-0"
             >
               Log In
             </Link>
             <Link
               href="/early-access"
-              className="px-4 lg:px-5 py-2 bg-accent text-accent-foreground text-sm font-black rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(var(--accent),0.15)] whitespace-nowrap shrink-0"
+              className="px-4.5 py-2 bg-accent text-accent-foreground text-sm font-black rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(var(--accent),0.15)] whitespace-nowrap shrink-0"
             >
               Early Access
             </Link>
