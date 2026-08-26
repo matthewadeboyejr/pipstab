@@ -38,13 +38,13 @@ const PublicNav = () => {
           </Link>
 
           {/* Center — Quick Tools */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex items-center">
             <div className="flex items-center bg-white/[0.03] rounded-xl px-1 py-1 border border-white/[0.04]">
               {tools.map((tool) => (
                 <Link
                   key={tool.label}
                   href={tool.href}
-                  className="px-3.5 py-1.5 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-all font-['Montserrat'] whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-all font-['Montserrat'] whitespace-nowrap shrink-0"
                 >
                   {tool.label}
                 </Link>
@@ -53,12 +53,12 @@ const PublicNav = () => {
           </div>
 
           {/* Right — Auth + Theme + Telegram */}
-          <div className="hidden md:flex items-center gap-2.5">
+          <div className="hidden md:flex items-center gap-2 lg:gap-2.5 shrink-0">
             <a
               href="https://t.me/pipstab"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-[#229ED9] hover:bg-white/5 transition-all font-['Montserrat']"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-[#229ED9] hover:bg-white/5 transition-all font-['Montserrat'] whitespace-nowrap shrink-0"
               title="Join PipTab Telegram Community"
             >
               <svg className="w-4 h-4 fill-current text-[#229ED9]" viewBox="0 0 24 24">
@@ -69,7 +69,7 @@ const PublicNav = () => {
 
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all shrink-0"
               aria-label="Toggle theme"
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -86,13 +86,13 @@ const PublicNav = () => {
             </button>
             <Link
               href="/auth/sign-in"
-              className="px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-['Montserrat']"
+              className="px-3 lg:px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-['Montserrat'] whitespace-nowrap shrink-0"
             >
               Log In
             </Link>
             <Link
               href="/early-access"
-              className="px-5 py-2 bg-accent text-accent-foreground text-sm font-black rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(var(--accent),0.15)]"
+              className="px-4 lg:px-5 py-2 bg-accent text-accent-foreground text-sm font-black rounded-xl hover:brightness-110 transition-all font-['Montserrat'] shadow-[0_0_20px_rgba(var(--accent),0.15)] whitespace-nowrap shrink-0"
             >
               Early Access
             </Link>
