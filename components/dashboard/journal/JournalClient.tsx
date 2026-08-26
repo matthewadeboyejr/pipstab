@@ -26,8 +26,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import LogTradeModal from "@/components/dashboard/LogTradeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import BrokerImportModal from "@/components/dashboard/settings/BrokerImportModal";
-import { Upload, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useAccounts } from "@/context/AccountContext";
 import { toPng } from 'html-to-image';
 import TradeShareCard from "./TradeShareCard";
@@ -847,11 +846,6 @@ function JournalClientContent({ trades }: JournalClientProps) {
                 open={!!tradeToEdit}
                 onClose={() => setTradeToEdit(null)}
                 tradeToEdit={tradeToEdit}
-            />
-
-            <BrokerImportModal
-                open={importModalOpen}
-                onClose={() => setImportModalOpen(false)}
             />
 
             {/* Hidden Capture Area */}

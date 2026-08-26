@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback } from "react";
 import { User, Shield, Bell, Key, Save, Plus, X, Loader2, CreditCard } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/context/ToastContext";
-import BrokerImport from "@/components/dashboard/settings/BrokerImport";
 import AccountManager from "@/components/dashboard/settings/AccountManager";
 
 type NotificationPreferences = {
@@ -380,16 +379,8 @@ export default function SettingsPage() {
                     <p className="text-[11px] text-muted-foreground">Manage your broker accounts and sync your trading history.</p>
                 </div>
                 
-                <div className="space-y-10">
+                <div className="space-y-6">
                     <AccountManager />
-                    
-                    <div className="pt-6 border-t border-border/30">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Key className="w-3.5 h-3.5 text-accent" />
-                            <h4 className="text-xs font-bold text-foreground">Import History</h4>
-                        </div>
-                        <BrokerImport />
-                    </div>
                 </div>
             </motion.div>
         </motion.div>
