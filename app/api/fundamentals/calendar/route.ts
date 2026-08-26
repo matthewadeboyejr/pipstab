@@ -118,33 +118,37 @@ async function resolvePastEventsActuals(events: EconomicCalendarEvent[]) {
     }));
 
     try {
-        const prompt = `You are an institutional macroeconomic data provider (Bloomberg Terminal / Refinitiv quality).
-The following economic calendar events have ALREADY passed their scheduled release time today or recently.
-Provide the official released 'actual' values for each event.
+        const prompt = `You are an institutional economic release data feed with live web search capabilities.
+Search the live macroeconomic releases for today/this week across ForexFactory, Bloomberg, Reuters, and official statistical agencies (e.g. ABS for Australia, BEA/BLS for US).
+Find the EXACT official released 'actual' values for the following events that have already been released:
 
-Events to populate:
+Events to resolve:
 ${JSON.stringify(eventSummaries, null, 2)}
 
-Return a JSON array where each object has "id" and the exact "actual" string (e.g. "0.5%", "2.0%", "1.9%", "2.7%", "40.83B", "20.6", "0.2%").
-Strict JSON format:
+Return a JSON array containing the exact official actual number for each event:
 [
   {
     "id": string,
-    "actual": string
+    "actual": string // e.g. "1.0%", "3.5%", "0.5%", "0.2%", "1.5%"
   }
 ]
-Return ONLY raw JSON.`;
+Return ONLY the JSON array (inside \`\`\`json markdown block or raw text).`;
 
         const res = await generateContentWithFallback({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             config: {
-                systemInstruction: "You are an institutional economic release data feed. Return exact actual release numbers matching official statistical agency prints.",
-                responseMimeType: "application/json",
+                systemInstruction: "You are an institutional live economic release synchronizer. Use Google Search to look up the exact live release numbers from official sources and ForexFactory.",
+                tools: [{ googleSearch: {} }],
             }
         });
 
         if (res && res.text) {
-            const resolvedList = JSON.parse(res.text);
+            let jsonText = res.text.trim();
+            const match = jsonText.match(/\[[\s\S]*\]/);
+            if (match) {
+                jsonText = match[0];
+            }
+            const resolvedList = JSON.parse(jsonText);
             if (Array.isArray(resolvedList)) {
                 resolvedList.forEach((r: { id: string; actual: string }) => {
                     if (r.id && r.actual) {
@@ -158,7 +162,7 @@ Return ONLY raw JSON.`;
             }
         }
     } catch (err) {
-        console.warn("Could not resolve live actuals:", err);
+        console.warn("Could not resolve live actuals with Google Search:", err);
     }
 }
 
