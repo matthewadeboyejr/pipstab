@@ -84,12 +84,12 @@ export default function TiltCircuitBreakerModal() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-xl rounded-3xl bg-card border border-red-500/30 shadow-2xl p-6 sm:p-8 space-y-6 overflow-hidden"
+                            className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-card border border-red-500/30 shadow-2xl p-5 sm:p-8 space-y-5 sm:space-y-6"
                         >
                             {/* Close Button */}
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
+                                className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
                             >
                                 <X className="w-4 h-4" />
                             </button>

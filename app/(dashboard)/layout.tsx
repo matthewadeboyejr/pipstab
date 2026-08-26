@@ -6,6 +6,7 @@ import TopBar from "@/components/dashboard/TopBar";
 import MobileSidebar from "@/components/dashboard/MobileSidebar";
 import BroadcastBanner from "@/components/dashboard/BroadcastBanner";
 import ProductTourModal from "@/components/dashboard/onboarding/ProductTourModal";
+import BottomNavBar from "@/components/dashboard/BottomNavBar";
 
 export default function DashboardLayout({
     children,
@@ -28,8 +29,11 @@ export default function DashboardLayout({
             <div className="lg:ml-[240px] min-h-screen flex flex-col transition-all duration-300">
                 <TopBar onMenuToggle={() => setMobileOpen(true)} />
                 <BroadcastBanner />
-                <main className="flex-1 p-4 md:p-6 overflow-x-hidden">{children}</main>
+                <main className="flex-1 p-3.5 sm:p-4 md:p-6 pb-24 lg:pb-6 overflow-x-hidden">{children}</main>
             </div>
+
+            {/* Mobile Native Bottom Navigation Bar */}
+            <BottomNavBar />
 
             {/* Interactive Onboarding Tour Modal */}
             <ProductTourModal />

@@ -271,7 +271,7 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                     </div>
 
                     {/* Section 1: G8 Relative Currency Strength Meter */}
-                    <div className="p-6 rounded-2xl bg-card border border-border/40 shadow-sm space-y-4">
+                    <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border/40 shadow-sm space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                                 <Scale className="w-4 h-4 text-accent" />
@@ -284,14 +284,14 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
                             {currencyStrengthList.map((curr, idx) => (
                                 <motion.div
                                     key={curr.code}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.04 }}
-                                    className="p-4 rounded-xl bg-white/[0.015] border border-border/30 hover:border-accent/30 transition-all space-y-3"
+                                    className="p-3 sm:p-4 rounded-xl bg-white/[0.015] border border-border/30 hover:border-accent/30 transition-all space-y-2.5 sm:space-y-3"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">

@@ -83,19 +83,19 @@ export default function SessionCalendar({ data }: SessionCalendarProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="rounded-2xl bg-card border border-border/50 p-5"
+            className="rounded-2xl bg-card border border-border/50 p-3.5 sm:p-5"
         >
             {/* Header — Month nav + stats */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
                 <div>
                     <h3 className="text-sm font-semibold text-foreground font-['Montserrat']">Trading Calendar</h3>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Daily P&L overview</p>
+                    <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Daily P&L overview</p>
                 </div>
                 <div className="flex items-center gap-1">
                     <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
                         <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="text-sm font-semibold text-foreground font-['Montserrat'] min-w-[140px] text-center">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground font-['Montserrat'] min-w-[110px] sm:min-w-[140px] text-center">
                         {MONTH_NAMES[viewMonth]} {viewYear}
                     </span>
                     <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
@@ -105,16 +105,16 @@ export default function SessionCalendar({ data }: SessionCalendarProps) {
             </div>
 
             {/* Monthly stats bar */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                 {[
                     { label: "Trades", value: totalTrades.toString() },
                     { label: "P&L", value: `${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(0)}`, color: totalPnl >= 0 ? "text-emerald-400" : "text-red-400" },
                     { label: "Win Days", value: winDays.toString(), color: "text-emerald-400" },
                     { label: "Loss Days", value: lossDays.toString(), color: "text-red-400" },
                 ].map((s) => (
-                    <div key={s.label} className="rounded-lg bg-secondary/50 px-2.5 py-2 text-center">
+                    <div key={s.label} className="rounded-lg bg-secondary/50 px-2 py-1.5 sm:px-2.5 sm:py-2 text-center">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                        <p className={`text-sm font-bold font-['Montserrat'] ${s.color || "text-foreground"}`}>{s.value}</p>
+                        <p className={`text-xs sm:text-sm font-bold font-['Montserrat'] ${s.color || "text-foreground"}`}>{s.value}</p>
                     </div>
                 ))}
             </div>
@@ -123,7 +123,7 @@ export default function SessionCalendar({ data }: SessionCalendarProps) {
             <div className="grid grid-cols-7 gap-1 mb-1">
                 {WEEKDAYS.map((d) => (
                     <div key={d} className="text-center">
-                        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">{d}</span>
+                        <span className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">{d}</span>
                     </div>
                 ))}
             </div>

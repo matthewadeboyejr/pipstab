@@ -407,43 +407,44 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
                                 </div>
 
                                 {/* Entry + Exit + SL */}
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Entry Price</label>
-                                        <input type="number" step="any" placeholder="1.0850" {...register("entry_price")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Entry Price</label>
+                                        <input type="number" inputMode="decimal" step="any" placeholder="1.0850" {...register("entry_price")} className="w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                         {errors.entry_price && <p className="text-xs text-red-500 mt-1">{errors.entry_price.message}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Exit Price</label>
-                                        <input type="number" step="any" placeholder="1.0920" {...register("exit_price")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Exit Price</label>
+                                        <input type="number" inputMode="decimal" step="any" placeholder="1.0920" {...register("exit_price")} className="w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                         {errors.exit_price && <p className="text-xs text-red-500 mt-1">{errors.exit_price.message}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Stop Loss</label>
-                                        <input type="number" step="any" placeholder="1.0810" {...register("sl")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Stop Loss</label>
+                                        <input type="number" inputMode="decimal" step="any" placeholder="1.0810" {...register("sl")} className="w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                         {errors.sl && <p className="text-xs text-red-500 mt-1">{errors.sl.message}</p>}
                                     </div>
                                 </div>
 
                                 {/* Lot Size + R:R + P&L */}
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Lot Size</label>
-                                        <input type="number" step="0.01" placeholder="0.50" {...register("lot_size")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">Lot Size</label>
+                                        <input type="number" inputMode="decimal" step="0.01" placeholder="0.50" {...register("lot_size")} className="w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                         {errors.lot_size && <p className="text-xs text-red-500 mt-1">{errors.lot_size.message}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">R:R</label>
-                                        <input type="text" placeholder="1:2.5" {...register("rr")} className="w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">R:R</label>
+                                        <input type="text" placeholder="1:2.5" {...register("rr")} className="w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors" />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">P&L ($)</label>
+                                        <label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 block">P&L ($)</label>
                                         <input 
                                             type="number" 
+                                            inputMode="decimal"
                                             step="0.01" 
                                             placeholder="245.50" 
                                             {...register("pnl")} 
-                                            className={`w-full px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm font-bold outline-none focus:border-accent/50 transition-colors ${watch("pnl") && parseFloat(watch("pnl")) > 0 ? "text-emerald-400" : watch("pnl") && parseFloat(watch("pnl")) < 0 ? "text-red-400" : "text-foreground"}`} 
+                                            className={`w-full px-2.5 sm:px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-xs sm:text-sm font-bold outline-none focus:border-accent/50 transition-colors ${watch("pnl") && parseFloat(watch("pnl")) > 0 ? "text-emerald-400" : watch("pnl") && parseFloat(watch("pnl")) < 0 ? "text-red-400" : "text-foreground"}`} 
                                         />
                                         {errors.pnl && <p className="text-xs text-red-500 mt-1">{errors.pnl.message}</p>}
                                     </div>

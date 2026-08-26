@@ -91,28 +91,28 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                     />
                 </div>
 
-                {/* Mindset Psychology Ritual */}
+                {/* Mindset Psychology Ritual - Desktop / Tablet */}
                 <button
                     onClick={() => {
                         if (typeof window !== "undefined") {
                             window.dispatchEvent(new Event("open-mindset-ritual"));
                         }
                     }}
-                    className="p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                    className="hidden sm:flex p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
                     title="Pre-Session Mindset Ritual & Audio Affirmations"
                     aria-label="Pre-Session Mindset Ritual"
                 >
                     <Brain className="w-5 h-5" />
                 </button>
 
-                {/* Product Tour Guide */}
+                {/* Product Tour Guide - Desktop / Tablet */}
                 <button
                     onClick={() => {
                         if (typeof window !== "undefined") {
                             window.dispatchEvent(new Event("open-product-tour"));
                         }
                     }}
-                    className="p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                    className="hidden sm:flex p-2.5 rounded-xl text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
                     title="Interactive Terminal Tour Guide"
                     aria-label="Interactive Terminal Tour Guide"
                 >
@@ -122,7 +122,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 {/* Theme toggle */}
                 <button
                     onClick={toggleTheme}
-                    className="relative p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 hover:bg-black/5 transition-colors"
+                    className="relative p-2 sm:p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 hover:bg-black/5 transition-colors"
                     aria-label="Toggle theme"
                 >
                     <AnimatePresence mode="wait" initial={false}>
@@ -134,7 +134,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                                 exit={{ rotate: 90, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Sun className="w-5 h-5" />
+                                <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
                             </motion.div>
                         ) : (
                             <motion.div
@@ -144,27 +144,27 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                                 exit={{ rotate: 90, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Moon className="w-5 h-5" />
+                                <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </button>
 
                 {/* Notification bell */}
-                <button className="relative p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 hover:bg-black/5 transition-colors">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <button className="relative p-2 sm:p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 hover:bg-black/5 transition-colors">
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 rounded-full bg-accent animate-pulse" />
                 </button>
 
-                {/* Quick add trade */}
+                {/* Quick add trade - Desktop only (Mobile has bottom nav center button) */}
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setTradeModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:brightness-110 transition-all font-['Montserrat']"
+                    className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:brightness-110 transition-all font-['Montserrat']"
                 >
                     <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Log Trade</span>
+                    <span>Log Trade</span>
                 </motion.button>
             </div>
 

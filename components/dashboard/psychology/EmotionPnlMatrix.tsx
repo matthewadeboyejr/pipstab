@@ -105,7 +105,7 @@ export default function EmotionPnlMatrix({ trades }: EmotionPnlMatrixProps) {
 
             {/* Matrix Cards Grid */}
             {emotionList.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                     {emotionList.map((item, i) => {
                         const Icon = item.icon;
                         const isProfitable = item.pnl >= 0;
@@ -116,19 +116,19 @@ export default function EmotionPnlMatrix({ trades }: EmotionPnlMatrixProps) {
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className={`p-4 rounded-2xl bg-white/[0.015] border ${item.border} space-y-3 flex flex-col justify-between hover:bg-white/[0.03] transition-all`}
+                                className={`p-3 sm:p-4 rounded-2xl bg-white/[0.015] border ${item.border} space-y-2.5 sm:space-y-3 flex flex-col justify-between hover:bg-white/[0.03] transition-all`}
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-7 h-7 rounded-xl ${item.bg} flex items-center justify-center`}>
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl ${item.bg} flex items-center justify-center shrink-0`}>
                                             <Icon className={`w-3.5 h-3.5 ${item.color}`} />
                                         </div>
-                                        <span className="text-xs font-bold text-foreground font-['Montserrat']">
+                                        <span className="text-[11px] sm:text-xs font-bold text-foreground font-['Montserrat'] truncate">
                                             {item.label}
                                         </span>
                                     </div>
-                                    <span className="text-[10px] font-mono text-muted-foreground">
-                                        {item.trades} {item.trades === 1 ? "trade" : "trades"}
+                                    <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground hidden xs:inline">
+                                        {item.trades}T
                                     </span>
                                 </div>
 

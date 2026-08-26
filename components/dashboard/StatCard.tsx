@@ -48,22 +48,22 @@ export default function StatCard({ label, value, change, trend = "neutral", icon
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-5 hover:border-accent/20 transition-all duration-300 group"
+            className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-3.5 sm:p-5 hover:border-accent/20 transition-all duration-300 group"
         >
             {/* Subtle gradient glow on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             <div className="relative z-10">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                             {icon}
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+                        <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{label}</span>
                     </div>
                     {sparklineData && sparklinePath && (
-                        <svg width="80" height="32" className="opacity-40 group-hover:opacity-70 transition-opacity">
+                        <svg width="80" height="32" className="hidden sm:block opacity-40 group-hover:opacity-70 transition-opacity">
                             <path
                                 d={sparklinePath}
                                 fill="none"
@@ -77,16 +77,16 @@ export default function StatCard({ label, value, change, trend = "neutral", icon
                 </div>
 
                 {/* Value */}
-                <p className="text-2xl font-bold text-foreground font-['Montserrat'] mb-1">{value}</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground font-['Montserrat'] mb-1 tracking-tight">{value}</p>
 
                 {/* Change indicator */}
                 {change && (
-                    <div className="flex items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${trendColors[trend]} ${trendBgColors[trend]}`}>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold ${trendColors[trend]} ${trendBgColors[trend]}`}>
                             <TrendIcon className="w-3 h-3" />
                             {change}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">vs last week</span>
+                        <span className="text-[10px] sm:text-[11px] text-muted-foreground hidden xs:inline">vs last week</span>
                     </div>
                 )}
             </div>

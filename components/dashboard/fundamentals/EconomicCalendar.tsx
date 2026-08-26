@@ -351,22 +351,22 @@ Economic release projections and deviation guidelines are for educational and ri
             )}
 
             {/* Filter Matrix Controls */}
-            <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-3 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/40 space-y-3 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     {/* Impact Level Pills */}
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full pb-0.5">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 flex items-center gap-1 shrink-0">
                             <Filter className="w-3 h-3 text-accent" /> Impact:
                         </span>
                         {[
-                            { id: "HIGH", label: "🔴 High Impact Only" },
-                            { id: "MED_HIGH", label: "🟡 High & Medium" },
+                            { id: "HIGH", label: "🔴 High Impact" },
+                            { id: "MED_HIGH", label: "🟡 High & Med" },
                             { id: "ALL", label: "All Releases" },
                         ].map((btn) => (
                             <button
                                 key={btn.id}
                                 onClick={() => setImpactFilter(btn.id as any)}
-                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${impactFilter === btn.id
+                                className={`px-2.5 sm:px-3 py-1 rounded-xl text-xs font-semibold transition-all border whitespace-nowrap shrink-0 ${impactFilter === btn.id
                                     ? "bg-accent text-accent-foreground border-accent shadow-sm"
                                     : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
                                     }`}
@@ -377,7 +377,7 @@ Economic release projections and deviation guidelines are for educational and ri
                     </div>
 
                     {/* Date Selector */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full">
                         {[
                             { id: "ALL", label: "This Week" },
                             { id: "TODAY", label: "Today" },

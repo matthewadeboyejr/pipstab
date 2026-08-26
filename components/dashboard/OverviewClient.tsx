@@ -328,12 +328,12 @@ function OverviewContent({
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
             {/* Header Switcher & AI Diagnostic Trigger */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border/50 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-card border border-border/50 shadow-sm">
                 {/* View Tabs */}
-                <div className="flex items-center p-1 rounded-xl bg-white/5 border border-border/30 text-xs font-bold">
+                <div className="flex items-center p-1 rounded-xl bg-white/5 border border-border/30 text-xs font-bold overflow-x-auto no-scrollbar max-w-full">
                     <button
                         onClick={() => handleTabChange("overview")}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all ${
+                        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                             activeTab === "overview"
                                 ? "bg-accent text-accent-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
@@ -344,7 +344,7 @@ function OverviewContent({
                     </button>
                     <button
                         onClick={() => handleTabChange("quant")}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all ${
+                        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                             activeTab === "quant"
                                 ? "bg-accent text-accent-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
@@ -355,7 +355,7 @@ function OverviewContent({
                     </button>
                     <button
                         onClick={() => handleTabChange("violations")}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all ${
+                        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                             activeTab === "violations"
                                 ? "bg-red-500 text-white shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
@@ -366,13 +366,13 @@ function OverviewContent({
                     </button>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-between sm:justify-end">
                     {/* Active Account Filter Indicator */}
                     {activeAccount && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs text-accent font-semibold">
+                        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs text-accent font-semibold">
                             <Layers className="w-3.5 h-3.5" />
-                            <span>
-                                <strong>{activeAccount.name}</strong> ({activeAccount.broker.toUpperCase()})
+                            <span className="truncate max-w-[150px]">
+                                <strong>{activeAccount.name}</strong>
                             </span>
                         </div>
                     )}
@@ -393,8 +393,8 @@ function OverviewContent({
                     {/* Daily Mindset & Psychology Axiom Widget */}
                     <DailyMindsetWidget />
 
-                    {/* KPI Strip */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* KPI Strip - 2x2 on Mobile, 4x1 on Desktop */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                         <StatCard
                             label="Net P&L"
                             value={`${stats.netPnl >= 0 ? "+" : "-"}$${Math.abs(stats.netPnl).toFixed(2)}`}
