@@ -449,13 +449,6 @@ function JournalClientContent({ trades }: JournalClientProps) {
                         <SlidersHorizontal className="w-4 h-4" />
                         <span className="hidden sm:inline">Filters</span>
                     </button>
-                    <button
-                        onClick={() => setImportModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/10 border border-accent/20 text-sm text-accent hover:bg-accent/20 hover:border-accent/30 transition-all font-medium whitespace-nowrap ml-auto"
-                    >
-                        <Upload className="w-4 h-4" />
-                        <span>Import Trade History</span>
-                    </button>
                 </div>
             </div>
 
