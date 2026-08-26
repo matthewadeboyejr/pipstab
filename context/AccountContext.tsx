@@ -54,7 +54,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         fetchAccounts();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
             if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                 fetchAccounts();
             } else if (event === 'SIGNED_OUT') {

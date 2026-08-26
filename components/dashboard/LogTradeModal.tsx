@@ -138,7 +138,7 @@ export default function LogTradeModal({ open, onClose, tradeToEdit }: LogTradeMo
 
     useEffect(() => {
         if (open) {
-            supabase.from("setups").select("*").then(({ data }) => {
+            supabase.from("setups").select("*").then(({ data }: { data: any }) => {
                 if (data && data.length > 0) {
                     setCustomSetups(data);
                 }
