@@ -172,7 +172,7 @@ export default function PsychologyClient({
             {/* Main Cognitive Readiness & History Log Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                 {/* Form or Clearance Card (2 Cols) */}
-                <div className="lg:col-span-2">
+                <div id="tour-readiness-card" className="lg:col-span-2">
                     {!hasCheckedInToday ? (
                         <motion.div
                             initial={{ opacity: 0, y: 15 }}
@@ -445,7 +445,9 @@ export default function PsychologyClient({
             </div>
 
             {/* Empirical Emotion-to-PnL Matrix */}
-            <EmotionPnlMatrix trades={trades} />
+            <div id="tour-emotion-matrix-card">
+                <EmotionPnlMatrix trades={trades} />
+            </div>
 
             {/* Trader's Core Mental Axioms & Non-Negotiables */}
             <TraderAxioms />

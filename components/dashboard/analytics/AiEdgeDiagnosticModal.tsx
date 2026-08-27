@@ -48,6 +48,7 @@ export default function AiEdgeDiagnosticModal({ stats, trades }: AiEdgeDiagnosti
         <>
             {/* Trigger Button */}
             <button
+                id="tour-ai-diagnostic"
                 onClick={runDiagnostic}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-accent-foreground font-bold text-xs hover:brightness-110 shadow-lg shadow-accent/20 transition-all font-['Montserrat'] active:scale-[0.98]"
             >

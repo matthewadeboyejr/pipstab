@@ -391,3 +391,115 @@ input:-webkit-autofill {
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   PipTab Driver.js Custom Glassmorphism Theme
+   ========================================================================== */
+.driver-popover.piptab-driver-popover {
+  background: #0B0F17 !important;
+  color: #F8FAFC !important;
+  border: 1px solid rgba(228, 230, 195, 0.25) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(228, 230, 195, 0.12) !important;
+  padding: 1.25rem 1.35rem !important;
+  font-family: 'Montserrat', sans-serif !important;
+  max-width: 380px !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  z-index: 100000000 !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-title {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #F8FAFC !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-description {
+  font-size: 0.8125rem !important;
+  color: #94A3B8 !important;
+  line-height: 1.55 !important;
+  margin-bottom: 1rem !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-top: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-progress-text {
+  font-size: 0.75rem !important;
+  font-family: monospace !important;
+  font-weight: 700 !important;
+  color: #e4e6c3 !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-next-btn {
+  background: #e4e6c3 !important;
+  color: #0F172A !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.45rem 0.9rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 15px rgba(228, 230, 195, 0.2) !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-next-btn:hover {
+  filter: brightness(1.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-prev-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #CBD5E1 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.45rem 0.75rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-close-btn {
+  color: #64748B !important;
+  transition: color 0.2s ease !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-close-btn:hover {
+  color: #F8FAFC !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #0B0F17 !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #0B0F17 !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #0B0F17 !important;
+}
+
+.driver-popover.piptab-driver-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #0B0F17 !important;
+}
+

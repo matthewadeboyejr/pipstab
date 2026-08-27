@@ -330,7 +330,7 @@ function OverviewContent({
             {/* Header Switcher & AI Diagnostic Trigger */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-card border border-border/50 shadow-sm">
                 {/* View Tabs */}
-                <div className="flex items-center p-1 rounded-xl bg-white/5 border border-border/30 text-xs font-bold overflow-x-auto no-scrollbar max-w-full">
+                <div id="tour-view-tabs" className="flex items-center p-1 rounded-xl bg-white/5 border border-border/30 text-xs font-bold overflow-x-auto no-scrollbar max-w-full">
                     <button
                         onClick={() => handleTabChange("overview")}
                         className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-all whitespace-nowrap shrink-0 ${
@@ -343,6 +343,7 @@ function OverviewContent({
                         Mission Control
                     </button>
                     <button
+                        id="tour-quant-tab"
                         onClick={() => handleTabChange("quant")}
                         className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                             activeTab === "quant"
@@ -394,7 +395,7 @@ function OverviewContent({
                     <DailyMindsetWidget />
 
                     {/* KPI Strip - 2x2 on Mobile, 4x1 on Desktop */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div id="tour-kpi-strip" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                         <StatCard
                             label="Net P&L"
                             value={`${stats.netPnl >= 0 ? "+" : "-"}$${Math.abs(stats.netPnl).toFixed(2)}`}
@@ -426,11 +427,13 @@ function OverviewContent({
                     </div>
 
                     {/* Interactive Cumulative Equity & Underwater Drawdown Curve */}
-                    <CumulativeEquityChart trades={filteredTrades} />
+                    <div id="tour-equity-curve">
+                        <CumulativeEquityChart trades={filteredTrades} />
+                    </div>
 
                     {/* Session Calendar (Left 2 cols) & Alpha Leakage + AI Insights (Right 1 col) */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                        <div className="lg:col-span-2">
+                        <div id="tour-session-calendar" className="lg:col-span-2">
                             <SessionCalendar data={dynamicCalendarData} />
                         </div>
                         <div className="lg:col-span-1 flex flex-col gap-4">

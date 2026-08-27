@@ -93,6 +93,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
                 {/* Mindset Psychology Ritual - Desktop / Tablet */}
                 <button
+                    id="tour-mindset-ritual"
                     onClick={() => {
                         if (typeof window !== "undefined") {
                             window.dispatchEvent(new Event("open-mindset-ritual"));
@@ -107,6 +108,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
                 {/* Product Tour Guide - Desktop / Tablet */}
                 <button
+                    id="tour-guide-trigger"
                     onClick={() => {
                         if (typeof window !== "undefined") {
                             window.dispatchEvent(new Event("open-product-tour"));
@@ -158,6 +160,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
                 {/* Quick add trade - Desktop only (Mobile has bottom nav center button) */}
                 <motion.button
+                    id="tour-log-trade-topbar"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setTradeModalOpen(true)}

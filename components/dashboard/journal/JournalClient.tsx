@@ -344,7 +344,7 @@ function JournalClientContent({ trades }: JournalClientProps) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-black/40 border border-border/50 rounded-2xl">
+                <div id="tour-journal-view-tabs" className="flex items-center gap-1 p-1 bg-black/40 border border-border/50 rounded-2xl">
                     <button
                         onClick={() => handleViewChange("logs")}
                         className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -452,7 +452,7 @@ function JournalClientContent({ trades }: JournalClientProps) {
             </div>
 
             {/* Trade list — Dual Mobile Cards & Desktop Table */}
-            <div className="space-y-4">
+            <div id="tour-trade-list-container" className="space-y-4">
                 {/* 1. Mobile Cards View (sm & below) */}
                 <div className="block md:hidden space-y-3">
                     {filteredTrades.map((trade, i) => {

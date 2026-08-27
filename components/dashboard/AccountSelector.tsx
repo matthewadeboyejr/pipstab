@@ -27,6 +27,7 @@ export default function AccountSelector() {
     return (
         <div className="relative" ref={dropdownRef}>
             <button
+                id="tour-account-selector"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-card border border-border/50 hover:border-accent/40 transition-all group"
             >

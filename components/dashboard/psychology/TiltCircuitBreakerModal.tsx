@@ -69,6 +69,7 @@ export default function TiltCircuitBreakerModal() {
         <>
             {/* Trigger Button */}
             <button
+                id="tour-tilt-reset"
                 onClick={startCircuitBreaker}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-bold text-xs hover:bg-red-500/20 transition-all font-['Montserrat'] shadow-lg shadow-red-500/5 active:scale-[0.98]"
             >

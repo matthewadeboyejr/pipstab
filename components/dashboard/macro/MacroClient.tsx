@@ -203,7 +203,7 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                 </div>
 
                 {/* Tab Pill Selector */}
-                <div className="flex items-center gap-1 p-1 bg-black/40 border border-border/50 rounded-2xl overflow-x-auto max-w-full no-scrollbar">
+                <div id="tour-macro-tabs" className="flex items-center gap-1 p-1 bg-black/40 border border-border/50 rounded-2xl overflow-x-auto max-w-full no-scrollbar">
                     {MACRO_TABS.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -271,7 +271,7 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                     </div>
 
                     {/* Section 1: G8 Relative Currency Strength Meter */}
-                    <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border/40 shadow-sm space-y-4">
+                    <div id="tour-g8-strength" className="p-4 sm:p-6 rounded-2xl bg-card border border-border/40 shadow-sm space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                                 <Scale className="w-4 h-4 text-accent" />
@@ -354,7 +354,7 @@ function MacroClientContent({ calendarData, newsData }: MacroClientProps) {
                     </div>
 
                     {/* Section 2: 24h Global Session & Overlap Radar */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div id="tour-session-radar" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* 24h Session Cards */}
                         <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border/40 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
