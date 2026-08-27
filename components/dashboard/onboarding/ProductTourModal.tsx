@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname } from "next/navigation";
 import {
     BarChart3,
     Brain,
@@ -13,119 +14,229 @@ import {
     ArrowLeft,
     X,
     Sparkles,
-    Shield,
+    ShieldAlert,
     Zap,
-    TrendingUp,
+    MousePointerClick,
+    Layers,
+    Clock,
+    ChevronDown,
+    ChevronUp,
+    Minimize2,
+    Maximize2,
+    Play,
+    Plus,
 } from "lucide-react";
-import Link from "next/link";
 
-interface TourStep {
+interface ActionHotspot {
+    label: string;
+    actionDescription: string;
+    outcomeDescription: string;
+    icon: any;
+    iconColor: string;
+    badge?: string;
+    triggerEvent?: string;
+}
+
+interface PageTourStep {
     id: string;
-    title: string;
-    subtitle: string;
+    route: string;
+    pageName: string;
+    pageSubtitle: string;
     badge: string;
     badgeColor: string;
     icon: any;
     iconColor: string;
     iconBg: string;
-    description: string;
-    highlights: string[];
-    actionUrl: string;
-    actionLabel: string;
+    overview: string;
+    hotspots: ActionHotspot[];
 }
 
-const TOUR_STEPS: TourStep[] = [
+const PAGE_TOUR_STEPS: PageTourStep[] = [
     {
         id: "performance",
-        title: "Performance & Quant Lab",
-        subtitle: "Your mathematical trading command center",
-        badge: "Mission Control",
+        route: "/performance",
+        pageName: "Performance & Mission Control",
+        pageSubtitle: "Your quantitative edge and equity command center",
+        badge: "Step 1 of 4: Performance Hub",
         badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
         icon: BarChart3,
         iconColor: "text-emerald-400",
         iconBg: "bg-emerald-500/10 border-emerald-500/20",
-        description:
-            "Track capital growth, analyze session alpha distributions across London/NY/Asian sessions, and uncover statistical expectancy per setup.",
-        highlights: [
-            "Interactive Cumulative Equity & Underwater Drawdown curves",
-            "8-Card Institutional Metric Grid with Sharpe & Profit Factor",
-            "1-Click AI Institutional Edge Diagnostic with Letter Grades",
-            "90-Day Calendar with exact dollar Alpha Leakage tracking",
+        overview:
+            "This screen tracks your equity curve, win-rate expectancy, and analyzes which setups and market sessions generate your highest profits.",
+        hotspots: [
+            {
+                label: "AI Edge Diagnostic Button",
+                actionDescription: "When you click 'AI Edge Diagnostic' at the top right...",
+                outcomeDescription:
+                    "PipTab's AI scans your entire trade journal to calculate an Institutional Letter Grade (A+ to F), detects your biggest profit leaks, and generates personalized recommendations.",
+                icon: Sparkles,
+                iconColor: "text-accent",
+                badge: "AI Powered",
+            },
+            {
+                label: "Mission Control / Quant Lab Tabs",
+                actionDescription: "When you click 'Quant & Edge Lab' or 'Violations'...",
+                outcomeDescription:
+                    "The screen switches to 8 institutional metrics including Sharpe Ratio, Mathematical Expectancy ($/trade), Max Win/Loss streaks, and exact dollars lost to broken rules.",
+                icon: Layers,
+                iconColor: "text-blue-400",
+            },
+            {
+                label: "Trading Account Dropdown (TopBar)",
+                actionDescription: "When you click the Account Selector in the top bar...",
+                outcomeDescription:
+                    "You can isolate metrics for a single broker account (e.g. Deriv, MT5) or view aggregated portfolio performance across all your trading accounts combined.",
+                icon: MousePointerClick,
+                iconColor: "text-purple-400",
+            },
+            {
+                label: "Daily Trading Calendar",
+                actionDescription: "When you hover or tap on any calendar day cell...",
+                outcomeDescription:
+                    "You see that day's exact net dollar P&L, number of trades taken, and profit/loss status color-coded in green or red.",
+                icon: Clock,
+                iconColor: "text-amber-400",
+            },
         ],
-        actionUrl: "/performance",
-        actionLabel: "Explore Performance Hub",
     },
     {
-        id: "psychology",
-        title: "Psychology & Tilt Shield",
-        subtitle: "Protect mental capital and eliminate revenge trading",
-        badge: "Cognitive Risk",
-        badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-        icon: Brain,
-        iconColor: "text-purple-400",
-        iconBg: "bg-purple-500/10 border-purple-500/20",
-        description:
-            "Calculate your daily pre-session readiness score, uncover emotional traps, and engage emergency circuit breakers during high-tilt moments.",
-        highlights: [
-            "Daily 4-Factor Cognitive Readiness Score (Sleep, Mood, Bias, Stress)",
-            "Empirical Emotion-to-PnL Matrix linking mood tags to real dollar returns",
-            "Emergency 3-Minute Box-Breathing Circuit Breaker with sanity filters",
-            "Trader's Core Mental Axioms and AI Mental Game Coaching",
-        ],
-        actionUrl: "/psychology",
-        actionLabel: "Open Psychology Hub",
-    },
-    {
-        id: "macro-outlooks",
-        title: "Macro Intel & Top-Down Outlooks",
-        subtitle: "Trade with institutional volume and orderflow conviction",
-        badge: "Market Edge",
-        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-        icon: Globe2,
-        iconColor: "text-blue-400",
-        iconBg: "bg-blue-500/10 border-blue-500/20",
-        description:
-            "Combine central bank divergence, multi-timeframe orderflow momentum, and structured technical dossiers before entering live risk.",
-        highlights: [
-            "5-Axis Institutional Pressure Radar (Growth, Yields, Flow, Inflation, Volatility)",
-            "Multi-Timeframe Intraday Flow Matrix (4H / 1H / 15M Alignment)",
-            "Central Bank Policy Rate matrices & Economic Release Deviation playbooks",
-            "Structured Trade Dossiers with Killzone plans & Invalidation triggers",
-        ],
-        actionUrl: "/macro",
-        actionLabel: "View Macro Radar",
-    },
-    {
-        id: "journal-setups",
-        title: "Execution Journal & Playbooks",
-        subtitle: "Quantify your edge and enforce checklist discipline",
-        badge: "Execution Audit",
+        id: "journal",
+        route: "/journal",
+        pageName: "Institutional Execution Journal",
+        pageSubtitle: "Zero-friction trade logging and discipline auditing",
+        badge: "Step 2 of 4: Trade Journal",
         badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
         icon: BookOpen,
         iconColor: "text-amber-400",
         iconBg: "bg-amber-500/10 border-amber-500/20",
-        description:
-            "Log executions with automated R:R calculation, upload chart screenshots, and enforce pre-trade checklists to measure dollar leakage.",
-        highlights: [
-            "Zero-friction Trade Logging with automated R:R & net balance updates",
-            "Multi-Account filter with Deriv, MT4/MT5, and manual accounts",
-            "Checklist Rule Auditing: Quantify exact dollars lost to rule breaks",
-            "Setup Playbook repository with custom win-rate tracking",
+        overview:
+            "This is where you log trades, upload chart screenshots, and enforce your trading plan with customized rule checklists.",
+        hotspots: [
+            {
+                label: "+ Log Trade Button",
+                actionDescription: "When you click '+ Log Trade' (or the floating center + button on mobile)...",
+                outcomeDescription:
+                    "Opens the logger with auto-calculated R:R, lot size risk, emotion tagging, session tags, pre-trade checklists, and Before/After chart screenshot uploaders.",
+                icon: Plus,
+                iconColor: "text-accent",
+                badge: "Quick Action",
+                triggerEvent: "open-trade-modal",
+            },
+            {
+                label: "Trade Cards & Expand Rows",
+                actionDescription: "When you click or tap on any trade card in your log...",
+                outcomeDescription:
+                    "It expands to show your full trade notes, checklist execution status, before/after chart screenshots, and allows you to edit or generate a 1-click PnL Share Card.",
+                icon: MousePointerClick,
+                iconColor: "text-emerald-400",
+            },
+            {
+                label: "AI Performance & Risk Auditor Tab",
+                actionDescription: "When you click 'AI Auditor' at the top of the Journal...",
+                outcomeDescription:
+                    "PipTab runs an objective AI audit that flags revenge trading risks, lot-size sizing discipline leaks, and calculates your mathematical Risk of Ruin.",
+                icon: Zap,
+                iconColor: "text-purple-400",
+                badge: "Auditor",
+            },
         ],
-        actionUrl: "/journal",
-        actionLabel: "Start Trading Journal",
+    },
+    {
+        id: "macro",
+        route: "/macro",
+        pageName: "Global Macro & Market Intelligence",
+        pageSubtitle: "Trade with institutional orderflow and catalyst awareness",
+        badge: "Step 3 of 4: Macro Suite",
+        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        icon: Globe2,
+        iconColor: "text-blue-400",
+        iconBg: "bg-blue-500/10 border-blue-500/20",
+        overview:
+            "Combines real-time currency strength rankings, live ForexFactory actuals releases, central bank interest rate divergence, and structured technical trade dossiers.",
+        hotspots: [
+            {
+                label: "G8 Currency Relative Strength Meter",
+                actionDescription: "When you view the G8 Strength Meter...",
+                outcomeDescription:
+                    "You see live 0–100 power rankings across USD, EUR, GBP, JPY, CAD, AUD, NZD, and CHF to instantly identify the strongest vs weakest currency pairs to trade.",
+                icon: BarChart3,
+                iconColor: "text-emerald-400",
+            },
+            {
+                label: "Live Economic Calendar & Timezone Selector",
+                actionDescription: "When you change the Timezone dropdown in the Economic Calendar...",
+                outcomeDescription:
+                    "All upcoming news events and live countdowns automatically adjust to your selected local timezone, with beat (🟢) vs miss (🔴) release actuals.",
+                icon: Clock,
+                iconColor: "text-accent",
+                badge: "Live Feed",
+            },
+            {
+                label: "24h Global Session & Overlap Radar",
+                actionDescription: "When you view the Session Radar...",
+                outcomeDescription:
+                    "You see exactly which global market session is active (London, New York, Asia) and get alerted during the high-liquidity London/New York overlap window.",
+                icon: Compass,
+                iconColor: "text-purple-400",
+            },
+        ],
+    },
+    {
+        id: "psychology",
+        route: "/psychology",
+        pageName: "Psychology & Cognitive Shield",
+        pageSubtitle: "Protect mental capital and eliminate emotional revenge trading",
+        badge: "Step 4 of 4: Mental Edge",
+        badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+        icon: Brain,
+        iconColor: "text-purple-400",
+        iconBg: "bg-purple-500/10 border-purple-500/20",
+        overview:
+            "Quantifies your mental game by linking emotional states to real dollar profitability and providing emergency circuit breakers when experiencing tilt.",
+        hotspots: [
+            {
+                label: "Daily Pre-Session Readiness Form",
+                actionDescription: "When you submit your sleep hours, mood, and stress levels...",
+                outcomeDescription:
+                    "PipTab calculates a 0–100% Cognitive Readiness Score. If your score is low, it advises caution or halts live trading to protect your account from emotional errors.",
+                icon: Brain,
+                iconColor: "text-accent",
+                badge: "Daily Ritual",
+            },
+            {
+                label: "Emergency Tilt Reset (Circuit Breaker)",
+                actionDescription: "When you click 'Emergency Tilt Reset'...",
+                outcomeDescription:
+                    "Launches an interactive 3-minute Box-Breathing pacing ring and requires 3 pre-execution sanity checks to lower your heart rate before placing another trade.",
+                icon: ShieldAlert,
+                iconColor: "text-red-400",
+                badge: "Emergency",
+            },
+            {
+                label: "Empirical Emotion-to-PnL Matrix",
+                actionDescription: "When you review the Emotion-to-PnL cards...",
+                outcomeDescription:
+                    "It shows your exact win rate and net dollar return for every emotion (e.g. 'Calm' = +$1,240 vs 'Frustrated' = -$680), helping you identify profitable mental states.",
+                icon: Sparkles,
+                iconColor: "text-emerald-400",
+            },
+        ],
     },
 ];
 
 export default function ProductTourModal() {
+    const router = useRouter();
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [activeHotspotIndex, setActiveHotspotIndex] = useState<number | null>(0);
 
+    // Initial launch logic
     useEffect(() => {
-        // Check if user has seen the tour before
-        const seen = localStorage.getItem("piptab_tour_v2_completed");
+        const seen = localStorage.getItem("piptab_tour_v3_completed");
         if (!seen) {
-            // Short delay so page mounts smoothly before popping up
             const timer = setTimeout(() => {
                 setIsOpen(true);
             }, 1200);
@@ -133,24 +244,34 @@ export default function ProductTourModal() {
         }
     }, []);
 
-    // Listen for custom trigger to open tour from TopBar / Settings
+    // Custom event trigger from TopBar / Tour button
     useEffect(() => {
         const handleOpenTour = () => {
             setCurrentIndex(0);
+            setActiveHotspotIndex(0);
+            setIsMinimized(false);
             setIsOpen(true);
+            router.push(PAGE_TOUR_STEPS[0].route);
         };
         window.addEventListener("open-product-tour", handleOpenTour);
         return () => window.removeEventListener("open-product-tour", handleOpenTour);
-    }, []);
+    }, [router]);
 
-    const closeTour = () => {
-        setIsOpen(false);
-        localStorage.setItem("piptab_tour_v2_completed", "true");
+    const currentStep = PAGE_TOUR_STEPS[currentIndex];
+    const StepIcon = currentStep.icon;
+
+    const navigateToStep = (index: number) => {
+        setCurrentIndex(index);
+        setActiveHotspotIndex(0);
+        const targetStep = PAGE_TOUR_STEPS[index];
+        if (pathname !== targetStep.route) {
+            router.push(targetStep.route);
+        }
     };
 
     const nextStep = () => {
-        if (currentIndex < TOUR_STEPS.length - 1) {
-            setCurrentIndex(currentIndex + 1);
+        if (currentIndex < PAGE_TOUR_STEPS.length - 1) {
+            navigateToStep(currentIndex + 1);
         } else {
             closeTour();
         }
@@ -158,144 +279,220 @@ export default function ProductTourModal() {
 
     const prevStep = () => {
         if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
+            navigateToStep(currentIndex - 1);
         }
     };
 
-    const currentStep = TOUR_STEPS[currentIndex];
-    const StepIcon = currentStep.icon;
+    const closeTour = () => {
+        setIsOpen(false);
+        localStorage.setItem("piptab_tour_v3_completed", "true");
+    };
+
+    if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-2xl rounded-3xl bg-card border border-border/60 shadow-2xl p-6 sm:p-8 space-y-6 overflow-hidden"
-                    >
-                        {/* Background Glow */}
-                        <div className="absolute top-0 right-0 w-72 h-72 bg-accent/5 rounded-full blur-[90px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-
-                        {/* Top Controls */}
-                        <div className="flex items-center justify-between">
+            <div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-6 pointer-events-none flex justify-center">
+                <motion.div
+                    initial={{ y: 80, opacity: 0, scale: 0.95 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: 80, opacity: 0, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    className="w-full max-w-4xl rounded-3xl bg-[#0B0F17]/95 backdrop-blur-2xl border border-accent/30 shadow-[0_10px_50px_rgba(0,0,0,0.8)] pointer-events-auto overflow-hidden flex flex-col"
+                >
+                    {/* Top Progress & Controls Bar */}
+                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-white/[0.02]">
+                        <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${currentStep.badgeColor}`}>
                                     {currentStep.badge}
                                 </span>
-                                <span className="text-xs font-mono text-muted-foreground">
-                                    Step {currentIndex + 1} of {TOUR_STEPS.length}
+                                <span className="text-xs font-bold text-foreground font-['Montserrat'] hidden sm:inline">
+                                    {currentStep.pageName}
                                 </span>
                             </div>
-
-                            <button
-                                onClick={closeTour}
-                                className="p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
-                                title="Close Tour"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
                         </div>
 
-                        {/* Slide Content */}
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={currentStep.id}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.25 }}
-                                className="space-y-6"
-                            >
-                                {/* Header */}
-                                <div className="flex items-start gap-4">
-                                    <div className={`w-12 h-12 rounded-2xl ${currentStep.iconBg} flex items-center justify-center shrink-0 border`}>
-                                        <StepIcon className={`w-6 h-6 ${currentStep.iconColor}`} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-foreground font-['Montserrat'] leading-tight">
-                                            {currentStep.title}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                            {currentStep.subtitle}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <p className="text-xs text-foreground/90 leading-relaxed">
-                                    {currentStep.description}
-                                </p>
-
-                                {/* Feature Highlights List */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    {currentStep.highlights.map((h, i) => (
-                                        <div
-                                            key={i}
-                                            className="p-3 rounded-xl bg-white/[0.015] border border-border/30 flex items-start gap-2.5"
-                                        >
-                                            <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                                            <span className="text-xs text-foreground/80 leading-snug">{h}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
-
-                        {/* Bottom Navigation & Progress Indicator */}
-                        <div className="pt-4 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            {/* Step Dots */}
-                            <div className="flex items-center gap-1.5">
-                                {TOUR_STEPS.map((_, idx) => (
+                        <div className="flex items-center gap-1.5">
+                            {/* Step Indicators */}
+                            <div className="flex items-center gap-1 mr-3">
+                                {PAGE_TOUR_STEPS.map((s, idx) => (
                                     <button
-                                        key={idx}
-                                        onClick={() => setCurrentIndex(idx)}
-                                        className={`h-1.5 rounded-full transition-all ${
+                                        key={s.id}
+                                        onClick={() => navigateToStep(idx)}
+                                        className={`h-2 rounded-full transition-all ${
                                             idx === currentIndex
                                                 ? "w-6 bg-accent"
                                                 : "w-2 bg-white/20 hover:bg-white/40"
                                         }`}
+                                        title={`Go to ${s.pageName}`}
                                     />
                                 ))}
                             </div>
 
-                            {/* Buttons */}
-                            <div className="flex items-center gap-2">
-                                {currentIndex > 0 && (
-                                    <button
-                                        onClick={prevStep}
-                                        className="px-3.5 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold transition-all flex items-center gap-1 font-['Montserrat']"
-                                    >
-                                        <ArrowLeft className="w-3.5 h-3.5" /> Back
-                                    </button>
-                                )}
+                            {/* Minimize / Maximize */}
+                            <button
+                                onClick={() => setIsMinimized(!isMinimized)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                                title={isMinimized ? "Expand Tour Guide" : "Minimize Tour Guide"}
+                            >
+                                {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                            </button>
 
-                                <button
-                                    onClick={closeTour}
-                                    className="px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground font-['Montserrat'] transition-colors"
-                                >
-                                    Skip Tour
-                                </button>
-
-                                <button
-                                    onClick={nextStep}
-                                    className="px-5 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:brightness-110 shadow-lg shadow-accent/20 transition-all flex items-center gap-1.5 font-['Montserrat']"
-                                >
-                                    {currentIndex === TOUR_STEPS.length - 1 ? (
-                                        <>
-                                            <Sparkles className="w-3.5 h-3.5" /> Launch Terminal
-                                        </>
-                                    ) : (
-                                        <>
-                                            Next Step <ArrowRight className="w-3.5 h-3.5" />
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                            {/* Close */}
+                            <button
+                                onClick={closeTour}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                                title="Exit Tour"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
-                    </motion.div>
-                </div>
-            )}
+                    </div>
+
+                    {/* Main Tour Content (Collapsible if minimized) */}
+                    <AnimatePresence initial={false}>
+                        {!isMinimized && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="p-5 sm:p-6 space-y-5 overflow-hidden"
+                            >
+                                {/* Page Header & Route Sync */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="flex items-start gap-3.5">
+                                        <div className={`w-11 h-11 rounded-2xl ${currentStep.iconBg} flex items-center justify-center shrink-0 border mt-0.5`}>
+                                            <StepIcon className={`w-5 h-5 ${currentStep.iconColor}`} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-extrabold text-foreground font-['Montserrat']">
+                                                {currentStep.pageName}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                {currentStep.overview}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Current Route Indicator */}
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-border/30 text-xs font-mono text-muted-foreground self-start sm:self-center shrink-0">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Active Page: <strong>{currentStep.route}</strong></span>
+                                    </div>
+                                </div>
+
+                                {/* "What Happens When You Click" Hotspot List */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                                        <span className="flex items-center gap-1.5 text-accent">
+                                            <MousePointerClick className="w-3.5 h-3.5" /> What Happens When You Click:
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">Select a button below to preview action</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                                        {currentStep.hotspots.map((hotspot, hIdx) => {
+                                            const HotspotIcon = hotspot.icon;
+                                            const isSelected = activeHotspotIndex === hIdx;
+
+                                            return (
+                                                <button
+                                                    key={hotspot.label}
+                                                    onClick={() => setActiveHotspotIndex(hIdx)}
+                                                    className={`text-left p-3 rounded-2xl border transition-all relative flex flex-col justify-between space-y-2 group ${
+                                                        isSelected
+                                                            ? "bg-accent/10 border-accent/50 shadow-md shadow-accent/10"
+                                                            : "bg-white/[0.02] border-border/40 hover:bg-white/[0.04] hover:border-border/70"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-2 w-full">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                                                                <HotspotIcon className={`w-3.5 h-3.5 ${hotspot.iconColor}`} />
+                                                            </div>
+                                                            <span className="text-xs font-bold text-foreground truncate font-['Montserrat']">
+                                                                {hotspot.label}
+                                                            </span>
+                                                        </div>
+                                                        {hotspot.badge && (
+                                                            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-accent/20 text-accent font-mono font-bold shrink-0">
+                                                                {hotspot.badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight">
+                                                        {hotspot.outcomeDescription}
+                                                    </p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Active Hotspot Detailed Explanation Box */}
+                                {activeHotspotIndex !== null && currentStep.hotspots[activeHotspotIndex] && (
+                                    <motion.div
+                                        key={`${currentStep.id}-${activeHotspotIndex}`}
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="p-3.5 rounded-2xl bg-gradient-to-r from-accent/10 via-card to-card border border-accent/30 space-y-1.5"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-accent font-mono">
+                                                {currentStep.hotspots[activeHotspotIndex].actionDescription}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-foreground/90 leading-relaxed font-sans">
+                                            {currentStep.hotspots[activeHotspotIndex].outcomeDescription}
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Bottom Navigation Actions */}
+                    <div className="px-5 py-3 border-t border-border/40 bg-white/[0.01] flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            {currentIndex > 0 && (
+                                <button
+                                    onClick={prevStep}
+                                    className="px-3.5 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold transition-all flex items-center gap-1.5 font-['Montserrat']"
+                                >
+                                    <ArrowLeft className="w-3.5 h-3.5" /> Previous Page
+                                </button>
+                            )}
+                            <button
+                                onClick={closeTour}
+                                className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground font-['Montserrat'] transition-colors"
+                            >
+                                Finish & Dismiss
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={nextStep}
+                                className="px-5 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-extrabold hover:brightness-110 shadow-lg shadow-accent/20 transition-all flex items-center gap-2 font-['Montserrat']"
+                            >
+                                {currentIndex === PAGE_TOUR_STEPS.length - 1 ? (
+                                    <>
+                                        <Sparkles className="w-4 h-4" /> Start Trading On PipTab
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Next Page: <strong>{PAGE_TOUR_STEPS[currentIndex + 1].pageName.split("&")[0]}</strong></span>
+                                        <ArrowRight className="w-3.5 h-3.5" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
         </AnimatePresence>
     );
 }
