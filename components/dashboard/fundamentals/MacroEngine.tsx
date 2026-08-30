@@ -110,9 +110,10 @@ export type AdvancedPairAnalysis = {
         regime_label: string;
     };
     intraday_flow?: {
-        flow_4h: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
-        flow_1h: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
-        flow_15m: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_daily?: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_4h?: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_1h?: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
+        flow_15m?: { supporting_pct: number; opposing_pct: number; timing: string; edge: string };
     };
     radar_pressure?: {
         axes: Array<{
@@ -809,9 +810,9 @@ This analysis is generated for educational, informational, and research purposes
                                     <div className="lg:col-span-7">
                                         <MultiTimeframeFlowMatrix
                                             symbol={pair.symbol}
+                                            flow_daily={pair.intraday_flow?.flow_daily}
                                             flow_4h={pair.intraday_flow?.flow_4h}
                                             flow_1h={pair.intraday_flow?.flow_1h}
-                                            flow_15m={pair.intraday_flow?.flow_15m}
                                             market_regimes={pair.market_regimes}
                                             bias={pair.bias}
                                         />

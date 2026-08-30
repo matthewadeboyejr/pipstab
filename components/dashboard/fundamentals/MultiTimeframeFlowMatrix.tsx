@@ -12,9 +12,9 @@ interface FlowLevel {
 
 interface MultiTimeframeFlowMatrixProps {
     symbol: string;
+    flow_daily?: FlowLevel;
     flow_4h?: FlowLevel;
     flow_1h?: FlowLevel;
-    flow_15m?: FlowLevel;
     market_regimes?: {
         trending: boolean;
         vol_expansion: boolean;
@@ -26,19 +26,27 @@ interface MultiTimeframeFlowMatrixProps {
 
 export default function MultiTimeframeFlowMatrix({
     symbol,
-    flow_4h = { supporting_pct: 92, opposing_pct: 8, timing: "TIMING - BULLISH", edge: "+84.0 pt edge" },
-    flow_1h = { supporting_pct: 86, opposing_pct: 14, timing: "TIMING - BULLISH", edge: "+72.0 pt edge" },
-    flow_15m = { supporting_pct: 80, opposing_pct: 20, timing: "TIMING - ACCELERATING", edge: "+60.0 pt edge" },
-    market_regimes = { trending: true, vol_expansion: true, range_bound: false, regime_label: "Elevated Volatility — Lean Long" },
+    flow_daily,
+    flow_4h = { supporting_pct: 88, opposing_pct: 12, timing: "TIMING - BULLISH", edge: "+76.0 pt edge Decisive" },
+    flow_1h = { supporting_pct: 83, opposing_pct: 17, timing: "TIMING - BULLISH", edge: "+65.0 pt edge Moderate" },
+    market_regimes = { trending: true, vol_expansion: true, range_bound: false, regime_label: "Low Volatility Compression — Pre-Breakout Bullish" },
     bias,
 }: MultiTimeframeFlowMatrixProps) {
     const isBull = bias === "BUY";
     const isBear = bias === "SELL";
 
+    // Gracefully compute or fallback daily flow if not present
+    const resolvedDaily: FlowLevel = flow_daily || {
+        supporting_pct: isBull ? 92 : isBear ? 10 : Math.min(95, (flow_4h.supporting_pct || 80) + 4),
+        opposing_pct: isBull ? 8 : isBear ? 90 : Math.max(5, (flow_4h.opposing_pct || 20) - 4),
+        timing: flow_4h.timing || (isBull ? "TIMING - BULLISH" : isBear ? "TIMING - BEARISH" : "TIMING - ACCUMULATION"),
+        edge: flow_4h.edge ? flow_4h.edge.replace(/\+?\d+/, (m) => `${Math.min(98, parseInt(m, 10) + 6)}`) : "+82.0 pt edge Decisive",
+    };
+
     const flowItems = [
-        { label: "Intraday Flow (4H)", data: flow_4h, tag: "HTF Direction" },
+        { label: "Daily Flow (D1)", data: resolvedDaily, tag: "HTF Macro Bias" },
+        { label: "Intraday Flow (4H)", data: flow_4h, tag: "HTF Structure" },
         { label: "Intraday Flow (1H)", data: flow_1h, tag: "ITF Momentum" },
-        { label: "Fast Intraday Flow (15M)", data: flow_15m, tag: "LTF Execution" },
     ];
 
     return (

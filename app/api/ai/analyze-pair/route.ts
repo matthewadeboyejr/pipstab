@@ -59,19 +59,19 @@ Return a valid JSON object strictly matching this TypeScript structure:
         "regime_label": string // e.g. "Elevated Volatility — Lean Long" or "Tight Compression — Await Break"
     },
     "intraday_flow": {
-        "flow_4h": {
-            "supporting_pct": number, // e.g. 95.0
-            "opposing_pct": number,   // e.g. 5.0
+        "flow_daily": {
+            "supporting_pct": number, // e.g. 96.0
+            "opposing_pct": number,   // e.g. 4.0
             "timing": string,         // e.g. "TIMING - BULLISH" or "TIMING - DECISIVE"
-            "edge": string            // e.g. "+90.0 pt edge Decisive"
+            "edge": string            // e.g. "+92.0 pt edge Decisive"
+        },
+        "flow_4h": {
+            "supporting_pct": number, // e.g. 92.0
+            "opposing_pct": number,   // e.g. 8.0
+            "timing": string,         // e.g. "TIMING - BULLISH"
+            "edge": string            // e.g. "+84.0 pt edge"
         },
         "flow_1h": {
-            "supporting_pct": number,
-            "opposing_pct": number,
-            "timing": string,
-            "edge": string
-        },
-        "flow_15m": {
             "supporting_pct": number,
             "opposing_pct": number,
             "timing": string,
@@ -182,6 +182,12 @@ Strict Rules:
                 regime_label: isBull ? "Elevated Volatility — Lean Long" : isBear ? "Distribution — Lean Short" : "Mean Reverting Range",
             },
             intraday_flow: {
+                flow_daily: {
+                    supporting_pct: isBull ? 95.0 : isBear ? 8.0 : 50.0,
+                    opposing_pct: isBull ? 5.0 : isBear ? 92.0 : 50.0,
+                    timing: isBull ? "TIMING - BULLISH" : isBear ? "TIMING - BEARISH" : "TIMING - NEUTRAL",
+                    edge: isBull ? "+90.0 pt edge Decisive" : isBear ? "-88.0 pt edge Short" : "Balanced Flow",
+                },
                 flow_4h: {
                     supporting_pct: isBull ? 92.5 : isBear ? 10.0 : 50.0,
                     opposing_pct: isBull ? 7.5 : isBear ? 90.0 : 50.0,
@@ -193,12 +199,6 @@ Strict Rules:
                     opposing_pct: isBull ? 12.0 : isBear ? 85.0 : 48.0,
                     timing: isBull ? "TIMING - BULLISH" : isBear ? "TIMING - BEARISH" : "TIMING - NEUTRAL",
                     edge: isBull ? "+76.0 pt edge" : isBear ? "-70.0 pt edge" : "Range Bound",
-                },
-                flow_15m: {
-                    supporting_pct: isBull ? 82.0 : isBear ? 20.0 : 49.0,
-                    opposing_pct: isBull ? 18.0 : isBear ? 80.0 : 51.0,
-                    timing: isBull ? "TIMING - ACCELERATING" : isBear ? "TIMING - LIQUIDATING" : "CHOPPY",
-                    edge: isBull ? "+64.0 pt edge" : isBear ? "-60.0 pt edge" : "Zero Edge",
                 },
             },
             radar_pressure: {
