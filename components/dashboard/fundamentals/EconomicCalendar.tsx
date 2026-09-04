@@ -34,7 +34,7 @@ import {
     getClientTimezone,
 } from "@/lib/macro/timezones";
 
-const CURRENCIES = ["ALL", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"];
+const CURRENCIES = ["ALL", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "CNY"];
 
 const countryFlags: Record<string, string> = {
     USD: "🇺🇸",
@@ -45,6 +45,8 @@ const countryFlags: Record<string, string> = {
     CAD: "🇨🇦",
     CHF: "🇨🇭",
     NZD: "🇳🇿",
+    CNY: "🇨🇳",
+    GLOBAL: "🌐",
 };
 
 export default function EconomicCalendar() {

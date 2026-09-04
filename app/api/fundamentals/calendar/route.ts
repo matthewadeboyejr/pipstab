@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { format, addDays, parseISO, isValid } from "date-fns";
-import { generateContentWithFallback } from "@/lib/gemini";
+import { isValid } from "date-fns";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export interface EconomicCalendarEvent {
     id: string;
-    time: string; // ISO or YYYY-MM-DD HH:mm
+    time: string; // ISO-8601 UTC string
     event: string;
-    country: string; // USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD
+    country: string; // USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD, GLOBAL
     impact: "High" | "Medium" | "Low";
     actual: string | null;
     prev: string;
@@ -42,7 +41,7 @@ function getAffectedPairs(country: string): string[] {
         case "NZD":
             return ["NZDUSD", "NZDJPY", "EURNZD", "AUDNZD"];
         default:
-            return ["Global FX"];
+            return ["Global FX", "XAUUSD"];
     }
 }
 
@@ -52,20 +51,42 @@ function generateDefaultPlaybook(event: string, country: string) {
 
     if (ev.includes("cpi") || ev.includes("inflation") || ev.includes("pce")) {
         return {
-            beat_consensus: `Higher inflation prints signal hawkish rate retention. Fosters immediate ${c} strength and yield spikes; bearish for gold and equities.`,
+            beat_consensus: `Higher inflation prints signal hawkish central bank rate retention. Fosters immediate ${c} strength and yield spikes; bearish for Gold and Equities.`,
             miss_consensus: `Cooling inflation accelerates rate cut expectations. Triggers ${c} softening and strong relief bids in precious metals and high-beta equities.`,
         };
-    } else if (ev.includes("payroll") || ev.includes("employment") || ev.includes("labor") || ev.includes("jobs") || ev.includes("claims")) {
+    } else if (
+        ev.includes("payroll") ||
+        ev.includes("employment") ||
+        ev.includes("labor") ||
+        ev.includes("jobs") ||
+        ev.includes("claims") ||
+        ev.includes("unemployment")
+    ) {
         return {
             beat_consensus: `Strong labor momentum dampens easing urgency. Drives ${c} bid and pushes sovereign benchmark yields higher.`,
             miss_consensus: `Labor softening triggers immediate growth concerns. Rapid downside pressure on ${c}; safe-haven bid in sovereign debt.`,
         };
-    } else if (ev.includes("rate") || ev.includes("fomc") || ev.includes("monetary") || ev.includes("ecb") || ev.includes("boe")) {
+    } else if (
+        ev.includes("rate") ||
+        ev.includes("fomc") ||
+        ev.includes("monetary") ||
+        ev.includes("ecb") ||
+        ev.includes("boe") ||
+        ev.includes("rba") ||
+        ev.includes("boj")
+    ) {
         return {
             beat_consensus: `Hawkish rate guidance or unexpected pause triggers aggressive ${c} impulse and carry-trade inflows.`,
             miss_consensus: `Dovish guidance or outsized cuts prompts immediate ${c} liquidation towards higher-yielding peers.`,
         };
-    } else if (ev.includes("pmi") || ev.includes("gdp") || ev.includes("sales") || ev.includes("confidence") || ev.includes("manufacturing")) {
+    } else if (
+        ev.includes("pmi") ||
+        ev.includes("gdp") ||
+        ev.includes("sales") ||
+        ev.includes("confidence") ||
+        ev.includes("manufacturing") ||
+        ev.includes("services")
+    ) {
         return {
             beat_consensus: `Solid macroeconomic expansion signals economic resilience, supporting ${c} cross-asset momentum.`,
             miss_consensus: `Contractionary print underscores stagnation risks, limiting ${c} appreciation.`,
@@ -78,96 +99,38 @@ function generateDefaultPlaybook(event: string, country: string) {
     };
 }
 
-// In-memory cache for resolved actuals to avoid duplicate AI requests
-const actualsCache = new Map<string, { actual: string; resolvedAt: number }>();
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
-
-async function resolvePastEventsActuals(events: EconomicCalendarEvent[]) {
-    const now = new Date();
-    // Filter events that have passed their release time within the last 48 hours and have no actual
-    const pastEvents = events.filter((ev) => {
-        const evDate = new Date(ev.time);
-        const diffHours = (now.getTime() - evDate.getTime()) / (1000 * 60 * 60);
-        return evDate <= now && diffHours <= 48 && !ev.actual;
-    });
-
-    if (pastEvents.length === 0) return;
-
-    // Check in-memory cache first
-    const unCachedEvents: EconomicCalendarEvent[] = [];
-    pastEvents.forEach((ev) => {
-        const cached = actualsCache.get(ev.id);
-        if (cached && (now.getTime() - cached.resolvedAt) < CACHE_TTL_MS) {
-            ev.actual = cached.actual;
-        } else {
-            unCachedEvents.push(ev);
-        }
-    });
-
-    if (unCachedEvents.length === 0) return;
-
-    // Resolve up to 30 passed events with Gemini
-    const targetEvents = unCachedEvents.slice(0, 30);
-    const eventSummaries = targetEvents.map(e => ({
-        id: e.id,
-        event: e.event,
-        country: e.country,
-        time: e.time,
-        forecast: e.estimate,
-        previous: e.prev
-    }));
-
-    try {
-        const prompt = `You are an institutional macroeconomic data provider (Bloomberg Terminal / Refinitiv quality).
-The following economic calendar events have ALREADY passed their scheduled release time today or recently.
-Provide the official released 'actual' values for each event.
-
-Events to populate:
-${JSON.stringify(eventSummaries, null, 2)}
-
-Return a JSON array where each object has "id" and the exact "actual" string (e.g. "0.5%", "2.0%", "1.9%", "2.7%", "40.83B", "20.6", "0.2%").
-Strict JSON format:
-[
-  {
-    "id": string,
-    "actual": string
-  }
-]
-Return ONLY raw JSON.`;
-
-        const res = await generateContentWithFallback({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            config: {
-                systemInstruction: "You are an institutional economic release data feed. Return exact actual release numbers matching official statistical agency prints.",
-                responseMimeType: "application/json",
-            }
-        });
-
-        if (res && res.text) {
-            const resolvedList = JSON.parse(res.text);
-            if (Array.isArray(resolvedList)) {
-                resolvedList.forEach((r: { id: string; actual: string }) => {
-                    if (r.id && r.actual) {
-                        const target = events.find(e => e.id === r.id);
-                        if (target) {
-                            target.actual = r.actual;
-                            actualsCache.set(r.id, { actual: r.actual, resolvedAt: Date.now() });
-                        }
-                    }
-                });
-            }
-        }
-    } catch (err) {
-        console.warn("Could not resolve live actuals:", err);
-    }
+// In-memory persistent cache for high-availability
+interface CalendarCache {
+    events: EconomicCalendarEvent[];
+    timestamp: number;
 }
 
+let memoryCache: CalendarCache | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function GET() {
+    const now = Date.now();
+
+    // Check memory cache first
+    if (memoryCache && (now - memoryCache.timestamp) < CACHE_TTL_MS && memoryCache.events.length > 0) {
+        return NextResponse.json(memoryCache.events, {
+            headers: {
+                "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+            },
+        });
+    }
+
     let calendarEvents: EconomicCalendarEvent[] = [];
 
-    // 1. Try fetching real-world live ForexFactory feed with no-store
+    // 1. Fetch live ForexFactory official feed with browser headers
     try {
         const ffRes = await fetch("https://nfs.faireconomy.media/ff_calendar_thisweek.json", {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://www.forexfactory.com/",
+            },
             cache: "no-store",
         });
 
@@ -176,126 +139,72 @@ export async function GET() {
             if (Array.isArray(raw) && raw.length > 0) {
                 calendarEvents = raw
                     .filter((ev: any) => {
+                        if (!ev || !ev.date || !ev.title) return false;
                         const d = new Date(ev.date);
                         return isValid(d);
                     })
                     .map((ev: any, idx: number) => {
-                        const country = ev.country || "USD";
-                        const impact = (ev.impact || "medium").toLowerCase();
+                        const rawCountry = (ev.country || "USD").toUpperCase();
+                        const country = rawCountry === "ALL" ? "GLOBAL" : rawCountry;
+                        const rawImpact = (ev.impact || "medium").toLowerCase();
                         const impactFormatted: "High" | "Medium" | "Low" =
-                            impact === "high" ? "High" : impact === "low" ? "Low" : "Medium";
+                            rawImpact === "high" ? "High" : rawImpact === "low" ? "Low" : "Medium";
                         const playbook = generateDefaultPlaybook(ev.title, country);
 
-                        const id = `ff-${idx}-${country}-${ev.title.replace(/[^a-zA-Z0-9]/g, "_")}`;
+                        // Strict ISO-8601 UTC normalization
+                        const isoTime = new Date(ev.date).toISOString();
+                        const id = `ff-${idx}-${country}-${ev.title.replace(/[^a-zA-Z0-9]/g, "_")}-${isoTime.split("T")[0]}`;
 
                         return {
                             id,
-                            time: ev.date,
-                            event: ev.title,
+                            time: isoTime,
+                            event: ev.title.trim(),
                             country: country,
                             impact: impactFormatted,
                             actual: ev.actual !== undefined && ev.actual !== "" ? ev.actual : null,
-                            prev: ev.previous || "—",
-                            estimate: ev.forecast || "—",
+                            prev: ev.previous && ev.previous.trim() !== "" ? ev.previous.trim() : "—",
+                            estimate: ev.forecast && ev.forecast.trim() !== "" ? ev.forecast.trim() : "—",
                             unit: "",
-                            commentary: `${ev.title} for ${country}. Prior: ${ev.previous || "N/A"}, Consensus: ${ev.forecast || "N/A"}.`,
+                            commentary: `${ev.title} for ${country}. Prior print: ${ev.previous || "N/A"}, Consensus forecast: ${ev.forecast || "N/A"}.`,
                             deviation_playbook: playbook,
                             affected_pairs: getAffectedPairs(country),
                         };
                     });
             }
         }
-    } catch (e) {
-        console.warn("ForexFactory live calendar fetch error, falling back to AI synthesis:", e);
+    } catch (err) {
+        console.warn("ForexFactory live calendar direct fetch error:", err);
     }
 
-    // 2. If live feed returned empty or failed, use AI synthesis with multi-model failover
-    if (calendarEvents.length === 0) {
-        try {
-            const today = format(new Date(), "EEEE, MMMM do, yyyy");
-            const prompt = `Generate a high-fidelity institutional economic calendar for the week starting from ${today}.
-Return a JSON array of 15 major global economic events (US, EU, UK, JPY, AUD, CAD, CHF).
-Strict JSON structure:
-[
-  {
-    "id": string,
-    "time": "YYYY-MM-DDTHH:mm:ssZ",
-    "event": string,
-    "country": "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF",
-    "impact": "High" | "Medium" | "Low",
-    "actual": string | null,
-    "prev": string,
-    "estimate": string,
-    "unit": string,
-    "commentary": string,
-    "deviation_playbook": {
-      "beat_consensus": string,
-      "miss_consensus": string
-    },
-    "affected_pairs": string[]
-  }
-]
-Return ONLY raw JSON.`;
+    // 2. If successfully fetched, update cache
+    if (calendarEvents.length > 0) {
+        // Sort ascending by time
+        calendarEvents.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+        memoryCache = {
+            events: calendarEvents,
+            timestamp: now,
+        };
 
-            const aiRes = await generateContentWithFallback({
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                config: { responseMimeType: "application/json" }
-            });
-
-            if (aiRes && aiRes.text) {
-                calendarEvents = JSON.parse(aiRes.text);
-            }
-        } catch (e) {
-            console.error("AI Calendar synthesis failed, using static institutional baseline:", e);
-            const now = new Date();
-            calendarEvents = [
-                {
-                    id: "base-1",
-                    time: addDays(now, 1).toISOString(),
-                    event: "US Core PCE Price Index MoM",
-                    country: "USD",
-                    impact: "High",
-                    actual: null,
-                    prev: "0.2%",
-                    estimate: "0.2%",
-                    unit: "%",
-                    commentary: "The Fed's primary benchmark for inflation trajectory.",
-                    deviation_playbook: {
-                        beat_consensus: "Surprise upside accelerates USD buying and yields; negative for Gold.",
-                        miss_consensus: "Softening PCE confirms rate-cut timeline, sparking broad USD selloff.",
-                    },
-                    affected_pairs: ["EURUSD", "USDJPY", "XAUUSD", "US30"],
-                },
-                {
-                    id: "base-2",
-                    time: addDays(now, 2).toISOString(),
-                    event: "Eurozone Flash Manufacturing PMI",
-                    country: "EUR",
-                    impact: "High",
-                    actual: null,
-                    prev: "45.8",
-                    estimate: "46.2",
-                    unit: "Index",
-                    commentary: "Leading indicator of European industrial and export momentum.",
-                    deviation_playbook: {
-                        beat_consensus: "Signals European stabilization, providing relief bids for EUR pairs.",
-                        miss_consensus: "Deeper contraction reinforces ECB dovish easing path.",
-                    },
-                    affected_pairs: ["EURUSD", "EURGBP", "EURJPY"],
-                },
-            ];
-        }
+        return NextResponse.json(calendarEvents, {
+            headers: {
+                "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+            },
+        });
     }
 
-    // 3. Resolve live actuals for all passed events
-    await resolvePastEventsActuals(calendarEvents);
+    // 3. If live fetch failed but we have previous cached data, serve the cached snapshot
+    if (memoryCache && memoryCache.events.length > 0) {
+        return NextResponse.json(memoryCache.events, {
+            headers: {
+                "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+            },
+        });
+    }
 
-    // Sort ascending by time
-    calendarEvents.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-
-    return NextResponse.json(calendarEvents, {
+    // 4. Return empty fallback rather than hallucinating fake events
+    return NextResponse.json([], {
         headers: {
-            "Cache-Control": "no-store, max-age=0, must-revalidate",
+            "Cache-Control": "no-store, max-age=0",
         },
     });
 }
