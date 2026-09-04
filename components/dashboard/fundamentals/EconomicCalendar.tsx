@@ -53,7 +53,7 @@ export default function EconomicCalendar() {
     const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
     const [impactFilter, setImpactFilter] = useState<"ALL" | "HIGH" | "MED_HIGH">("MED_HIGH");
     const [selectedCurrency, setSelectedCurrency] = useState<string>("ALL");
-    const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "TOMORROW">("ALL");
+    const [dateFilter, setDateFilter] = useState<"TODAY" | "TOMORROW" | "YESTERDAY" | "ALL">("TODAY");
     const [selectedTimezone, setSelectedTimezone] = useState<string>("LOCAL");
     const [copiedSchedule, setCopiedSchedule] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -118,8 +118,13 @@ export default function EconomicCalendar() {
 
     // Filtered events
     const filteredEvents = useMemo(() => {
-        const todayStr = getDatePartInTz(new Date().toISOString(), selectedTimezone);
-        const tomorrowDate = new Date();
+        const todayStr = getDatePartInTz(currentTime.toISOString(), selectedTimezone);
+
+        const yesterdayDate = new Date(currentTime);
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = getDatePartInTz(yesterdayDate.toISOString(), selectedTimezone);
+
+        const tomorrowDate = new Date(currentTime);
         tomorrowDate.setDate(tomorrowDate.getDate() + 1);
         const tomorrowStr = getDatePartInTz(tomorrowDate.toISOString(), selectedTimezone);
 
@@ -134,13 +139,14 @@ export default function EconomicCalendar() {
             // Date filter based on selected timezone
             if (dateFilter !== "ALL") {
                 const evDateStr = getDatePartInTz(ev.time, selectedTimezone);
+                if (dateFilter === "YESTERDAY" && evDateStr !== yesterdayStr) return false;
                 if (dateFilter === "TODAY" && evDateStr !== todayStr) return false;
                 if (dateFilter === "TOMORROW" && evDateStr !== tomorrowStr) return false;
             }
 
             return true;
         });
-    }, [events, impactFilter, selectedCurrency, dateFilter, selectedTimezone]);
+    }, [events, impactFilter, selectedCurrency, dateFilter, selectedTimezone, currentTime]);
 
     // Next High-Impact Event
     const nextHighImpactEvent = useMemo(() => {
@@ -185,12 +191,16 @@ export default function EconomicCalendar() {
 
     const formatDateLabel = (dateStr: string) => {
         try {
-            const todayStr = getDatePartInTz(new Date().toISOString(), selectedTimezone);
-            const tomorrowDate = new Date();
+            const todayStr = getDatePartInTz(currentTime.toISOString(), selectedTimezone);
+            const yesterdayDate = new Date(currentTime);
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterdayStr = getDatePartInTz(yesterdayDate.toISOString(), selectedTimezone);
+            const tomorrowDate = new Date(currentTime);
             tomorrowDate.setDate(tomorrowDate.getDate() + 1);
             const tomorrowStr = getDatePartInTz(tomorrowDate.toISOString(), selectedTimezone);
 
             if (dateStr === todayStr) return "Today";
+            if (dateStr === yesterdayStr) return "Yesterday";
             if (dateStr === tomorrowStr) return "Tomorrow";
 
             const parts = dateStr.split("-");
@@ -359,19 +369,20 @@ Economic release projections and deviation guidelines are for educational and ri
                             <Filter className="w-3 h-3 text-accent" /> Impact:
                         </span>
                         {[
-                            { id: "HIGH", label: "🔴 High Impact" },
-                            { id: "MED_HIGH", label: "🟡 High & Med" },
-                            { id: "ALL", label: "All Releases" },
+                            { id: "HIGH", label: "High Impact", color: "bg-red-500" },
+                            { id: "MED_HIGH", label: "High & Med", color: "bg-amber-500" },
+                            { id: "ALL", label: "All Releases", color: "bg-blue-400" },
                         ].map((btn) => (
                             <button
                                 key={btn.id}
                                 onClick={() => setImpactFilter(btn.id as any)}
-                                className={`px-2.5 sm:px-3 py-1 rounded-xl text-xs font-semibold transition-all border whitespace-nowrap shrink-0 ${impactFilter === btn.id
+                                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-semibold transition-all border whitespace-nowrap shrink-0 ${impactFilter === btn.id
                                     ? "bg-accent text-accent-foreground border-accent shadow-sm"
                                     : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
                                     }`}
                             >
-                                {btn.label}
+                                <span className={`w-1.5 h-1.5 rounded-full ${btn.color}`} />
+                                <span>{btn.label}</span>
                             </button>
                         ))}
                     </div>
@@ -379,15 +390,16 @@ Economic release projections and deviation guidelines are for educational and ri
                     {/* Date Selector */}
                     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full">
                         {[
-                            { id: "ALL", label: "This Week" },
+                            { id: "YESTERDAY", label: "Yesterday" },
                             { id: "TODAY", label: "Today" },
                             { id: "TOMORROW", label: "Tomorrow" },
+                            { id: "ALL", label: "Whole Week" },
                         ].map((btn) => (
                             <button
                                 key={btn.id}
                                 onClick={() => setDateFilter(btn.id as any)}
-                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${dateFilter === btn.id
-                                    ? "bg-white/10 text-foreground border-border/60"
+                                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border shrink-0 ${dateFilter === btn.id
+                                    ? "bg-accent/20 text-accent border-accent/50 font-bold shadow-sm"
                                     : "bg-white/[0.02] border-border/40 text-muted-foreground hover:text-foreground"
                                     }`}
                             >
@@ -600,16 +612,28 @@ Economic release projections and deviation guidelines are for educational and ri
                     </div>
                 ))}
 
-            {filteredEvents.length === 0 && !isLoading && (
-                <div className="p-12 text-center rounded-2xl bg-card border border-border/30 space-y-2">
-                    <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mx-auto" />
-                    <p className="text-sm font-bold text-foreground">No events found</p>
-                    <p className="text-xs text-muted-foreground">
-                        Try adjusting your impact level or currency filter.
-                    </p>
-                </div>
-            )}
+                {filteredEvents.length === 0 && !isLoading && (
+                    <div className="p-12 text-center rounded-2xl bg-card border border-border/30 space-y-3">
+                        <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mx-auto" />
+                        <p className="text-sm font-bold text-foreground">
+                            No events found for {dateFilter === "TODAY" ? "Today" : dateFilter === "TOMORROW" ? "Tomorrow" : dateFilter === "YESTERDAY" ? "Yesterday" : "this period"}
+                        </p>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                            {dateFilter !== "ALL"
+                                ? "There are no scheduled releases matching your filters on this day. You can view the whole week's schedule."
+                                : "Try adjusting your impact level or currency filter."}
+                        </p>
+                        {dateFilter !== "ALL" && (
+                            <button
+                                onClick={() => setDateFilter("ALL")}
+                                className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-accent/10 border border-accent/30 text-accent text-xs font-bold hover:bg-accent/20 transition-all font-['Montserrat']"
+                            >
+                                <span>View Whole Week</span>
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
-        </div >
     );
 }
